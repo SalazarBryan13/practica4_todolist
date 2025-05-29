@@ -7,6 +7,7 @@ import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,13 +24,15 @@ public class UsuarioService {
     private UsuarioRepository usuarioRepository;
     @Autowired
     private ModelMapper modelMapper;
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     @Transactional(readOnly = true)
     public LoginStatus login(String eMail, String password) {
-        Optional<Usuario> usuario = usuarioRepository.findByEmail(eMail);
-        if (!usuario.isPresent()) {
+        Usuario usuario = usuarioRepository.findByEmail(eMail);
+        if (usuario == null) {
             return LoginStatus.USER_NOT_FOUND;
-        } else if (!usuario.get().getPassword().equals(password)) {
+        } else if (!passwordEncoder.matches(password, usuario.getPassword())) {
             return LoginStatus.ERROR_PASSWORD;
         } else {
             return LoginStatus.LOGIN_OK;
@@ -50,6 +53,7 @@ public class UsuarioService {
             throw new UsuarioServiceException("El usuario no tiene password");
         else {
             Usuario usuarioNuevo = modelMapper.map(usuario, Usuario.class);
+            usuarioNuevo.setPassword(passwordEncoder.encode(usuario.getPassword()));
             usuarioNuevo = usuarioRepository.save(usuarioNuevo);
             return modelMapper.map(usuarioNuevo, UsuarioData.class);
         }
@@ -57,11 +61,9 @@ public class UsuarioService {
 
     @Transactional(readOnly = true)
     public UsuarioData findByEmail(String email) {
-        Usuario usuario = usuarioRepository.findByEmail(email).orElse(null);
+        Usuario usuario = usuarioRepository.findByEmail(email);
         if (usuario == null) return null;
-        else {
-            return modelMapper.map(usuario, UsuarioData.class);
-        }
+        else return new UsuarioData(usuario);
     }
 
     @Transactional(readOnly = true)

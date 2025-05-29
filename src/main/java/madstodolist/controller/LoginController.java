@@ -11,6 +11,7 @@ import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 
 import javax.servlet.http.HttpSession;
@@ -91,5 +92,22 @@ public class LoginController {
    public String logout(HttpSession session) {
         managerUserSession.logout();
         return "redirect:/login";
+   }
+
+   @GetMapping("/usuarios/{id}/perfil")
+   public String perfilUsuario(@PathVariable(value = "id") Long idUsuario, Model model, HttpSession session) {
+       Long idUsuarioLogeado = managerUserSession.usuarioLogeado();
+       
+       if (idUsuarioLogeado == null) {
+           return "redirect:/login";
+       }
+
+       if (!idUsuarioLogeado.equals(idUsuario)) {
+           return "redirect:/usuarios/" + idUsuarioLogeado + "/perfil";
+       }
+
+       UsuarioData usuario = usuarioService.findById(idUsuario);
+       model.addAttribute("usuario", usuario);
+       return "perfil";
    }
 }
