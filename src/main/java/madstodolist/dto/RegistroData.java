@@ -24,11 +24,19 @@ public class RegistroData {
     @DateTimeFormat(pattern = "dd-MM-yyyy")
     private Date fechaNacimiento;
 
+<<<<<<< HEAD
     public String geteMail() {
         return eMail;
     }
 
     public void seteMail(String eMail) {
+=======
+    public String getEmail() {
+        return eMail;
+    }
+
+    public void setEmail(String eMail) {
+>>>>>>> 9207783e011d3b7383852f076cef692c1c05ebab
         this.eMail = eMail;
     }
 

@@ -45,10 +45,13 @@
             <artifactId>modelmapper</artifactId>
             <version>3.0.0</version>
         </dependency>
+<<<<<<< HEAD
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-security</artifactId>
         </dependency>
+=======
+>>>>>>> 9207783e011d3b7383852f076cef692c1c05ebab
     </dependencies>
 
     <build>

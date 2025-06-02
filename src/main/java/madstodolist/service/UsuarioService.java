@@ -7,6 +7,7 @@ import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+<<<<<<< HEAD
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -15,13 +16,24 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import java.util.Collections;
+=======
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+>>>>>>> 9207783e011d3b7383852f076cef692c1c05ebab
 
 import java.util.Optional;
 
 @Service
+<<<<<<< HEAD
 public class UsuarioService implements UserDetailsService {
 
     private static final Logger logger = LoggerFactory.getLogger(UsuarioService.class);
+=======
+public class UsuarioService {
+
+    Logger logger = LoggerFactory.getLogger(UsuarioService.class);
+>>>>>>> 9207783e011d3b7383852f076cef692c1c05ebab
 
     public enum LoginStatus {LOGIN_OK, USER_NOT_FOUND, ERROR_PASSWORD}
 
@@ -32,6 +44,7 @@ public class UsuarioService implements UserDetailsService {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+<<<<<<< HEAD
     @Override
     @Transactional(readOnly = true)
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
@@ -105,10 +118,43 @@ public class UsuarioService implements UserDetailsService {
         
         logger.debug("Usuario registrado exitosamente: {}", usuario.getEmail());
         return modelMapper.map(usuarioNuevo, UsuarioData.class);
+=======
+    @Transactional(readOnly = true)
+    public LoginStatus login(String eMail, String password) {
+        Usuario usuario = usuarioRepository.findByEmail(eMail);
+        if (usuario == null) {
+            return LoginStatus.USER_NOT_FOUND;
+        } else if (!passwordEncoder.matches(password, usuario.getPassword())) {
+            return LoginStatus.ERROR_PASSWORD;
+        } else {
+            return LoginStatus.LOGIN_OK;
+        }
+    }
+
+    // Se añade un usuario en la aplicación.
+    // El email y password del usuario deben ser distinto de null
+    // El email no debe estar registrado en la base de datos
+    @Transactional
+    public UsuarioData registrar(UsuarioData usuario) {
+        Optional<Usuario> usuarioBD = usuarioRepository.findByEmail(usuario.getEmail());
+        if (usuarioBD.isPresent())
+            throw new UsuarioServiceException("El usuario " + usuario.getEmail() + " ya está registrado");
+        else if (usuario.getEmail() == null)
+            throw new UsuarioServiceException("El usuario no tiene email");
+        else if (usuario.getPassword() == null)
+            throw new UsuarioServiceException("El usuario no tiene password");
+        else {
+            Usuario usuarioNuevo = modelMapper.map(usuario, Usuario.class);
+            usuarioNuevo.setPassword(passwordEncoder.encode(usuario.getPassword()));
+            usuarioNuevo = usuarioRepository.save(usuarioNuevo);
+            return modelMapper.map(usuarioNuevo, UsuarioData.class);
+        }
+>>>>>>> 9207783e011d3b7383852f076cef692c1c05ebab
     }
 
     @Transactional(readOnly = true)
     public UsuarioData findByEmail(String email) {
+<<<<<<< HEAD
         logger.debug("Buscando usuario por email: {}", email);
         Usuario usuario = usuarioRepository.findByEmail(email).orElse(null);
         if (usuario == null) {
@@ -117,10 +163,16 @@ public class UsuarioService implements UserDetailsService {
         }
         logger.debug("Usuario encontrado: {}", email);
         return modelMapper.map(usuario, UsuarioData.class);
+=======
+        Usuario usuario = usuarioRepository.findByEmail(email);
+        if (usuario == null) return null;
+        else return new UsuarioData(usuario);
+>>>>>>> 9207783e011d3b7383852f076cef692c1c05ebab
     }
 
     @Transactional(readOnly = true)
     public UsuarioData findById(Long usuarioId) {
+<<<<<<< HEAD
         logger.debug("Buscando usuario por id: {}", usuarioId);
         Usuario usuario = usuarioRepository.findById(usuarioId).orElse(null);
         if (usuario == null) {
@@ -129,5 +181,12 @@ public class UsuarioService implements UserDetailsService {
         }
         logger.debug("Usuario encontrado con id: {}", usuarioId);
         return modelMapper.map(usuario, UsuarioData.class);
+=======
+        Usuario usuario = usuarioRepository.findById(usuarioId).orElse(null);
+        if (usuario == null) return null;
+        else {
+            return modelMapper.map(usuario, UsuarioData.class);
+        }
+>>>>>>> 9207783e011d3b7383852f076cef692c1c05ebab
     }
 }
