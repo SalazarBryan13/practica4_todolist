@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="fragments :: head (titulo='Perfil de Usuario')"></head>
+
+<body>
+<div class="container-fluid">
+    <div class="row justify-content-center mb-3">
+        <div class="col-auto">
+            <h2>Perfil de Usuario</h2>
+        </div>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-6">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title" th:text="${usuario.nombre}">Nombre</h5>
+                    <p class="card-text">
+                        <strong>Email:</strong> <span th:text="${usuario.email}">email</span>
+                    </p>
+                    <p class="card-text">
+                        <strong>Fecha de Nacimiento:</strong> 
+                        <span th:text="${#dates.format(usuario.fechaNacimiento, 'dd-MM-yyyy')}">fecha</span>
+                    </p>
+                    <a th:href="@{/usuarios/{id}/tareas(id=${usuario.id})}" class="btn btn-primary">Ver Tareas</a>
+                    <a th:href="@{/usuarios/{id}/editar(id=${usuario.id})}" class="btn btn-secondary">Editar Perfil</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div th:replace="fragments::javascript"/>
+</body>
+</html> 
