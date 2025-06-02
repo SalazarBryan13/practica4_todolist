@@ -1,0 +1,5 @@
+[33mcommit 6f6cafac4f2ff6505cffff32f9f2168cfa85d330[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mbarra-menu[m[33m)[m
+Author: Bryan Salazar <bryan.salazar@epn.edu.ec>
+Date:   Sun Jun 1 22:54:33 2025 -0500
+
+    Implementada barra de menú con navegación y opciones de usuario
