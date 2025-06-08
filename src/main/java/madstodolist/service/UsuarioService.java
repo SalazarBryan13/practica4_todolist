@@ -120,8 +120,10 @@ public class UsuarioService implements UserDetailsService {
             logger.debug("Usuario no encontrado con email: {}", email);
             return null;
         }
-        logger.debug("Usuario encontrado: {}", email);
-        return modelMapper.map(usuario, UsuarioData.class);
+        logger.debug("Usuario encontrado: {} admin={}", usuario.getEmail(), usuario.isAdmin());
+        UsuarioData usuarioData = modelMapper.map(usuario, UsuarioData.class);
+        logger.debug("UsuarioData recuperado: {} admin={}", usuarioData.getEmail(), usuarioData.isAdmin());
+        return usuarioData;
     }
 
     @Transactional(readOnly = true)
@@ -132,8 +134,10 @@ public class UsuarioService implements UserDetailsService {
             logger.debug("Usuario no encontrado con id: {}", usuarioId);
             return null;
         }
-        logger.debug("Usuario encontrado con id: {}", usuarioId);
-        return modelMapper.map(usuario, UsuarioData.class);
+        logger.debug("Usuario encontrado con id: {} admin={}", usuarioId, usuario.isAdmin());
+        UsuarioData usuarioData = modelMapper.map(usuario, UsuarioData.class);
+        logger.debug("UsuarioData recuperado con id: {} admin={}", usuarioId, usuarioData.isAdmin());
+        return usuarioData;
     }
 
     @Transactional(readOnly = true)

@@ -59,9 +59,12 @@ public class LoginController {
             UsuarioData usuario = usuarioService.findByEmail(loginData.geteMail());
             if (usuario != null) {
                 managerUserSession.logearUsuario(usuario.getId(), usuario.getNombre());
+                logger.debug("¿Es admin? {}", usuario.isAdmin());
                 if (usuario.isAdmin()) {
+                    logger.debug("Redirigiendo a /registrados porque es admin");
                     return "redirect:/registrados";
                 }
+                logger.debug("Redirigiendo a /usuarios/{}/tareas porque NO es admin", usuario.getId());
                 return "redirect:/usuarios/" + usuario.getId() + "/tareas";
             }
             return "redirect:/login";

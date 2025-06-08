@@ -48,7 +48,11 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                     UsuarioData usuario = usuarioService.findByEmail(email);
                     if (usuario != null) {
                         managerUserSession.logearUsuario(usuario.getId(), usuario.getNombre());
-                        response.sendRedirect("/usuarios/" + usuario.getId() + "/tareas");
+                        if (usuario.isAdmin()) {
+                            response.sendRedirect("/registrados");
+                        } else {
+                            response.sendRedirect("/usuarios/" + usuario.getId() + "/tareas");
+                        }
                     } else {
                         response.sendRedirect("/login?error=true");
                     }
