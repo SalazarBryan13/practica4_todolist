@@ -34,7 +34,7 @@
                         <div class="form-group mb-4">
                             <label for="fechaNacimiento">Fecha de nacimiento</label>
                             <input id="fechaNacimiento" class="form-control form-control-lg" name="fechaNacimiento"
-                                   placeholder="01-12-2019" th:field="*{fechaNacimiento}" required/>
+                                   type="date" th:field="*{fechaNacimiento}" required/>
                             <div class="invalid-feedback" th:if="${#fields.hasErrors('fechaNacimiento')}" th:errors="*{fechaNacimiento}"></div>
                         </div>
                         <div class="d-grid gap-2 mb-3">
