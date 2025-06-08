@@ -34,6 +34,7 @@ public class UsuarioController {
         }
         List<UsuarioData> usuarios = usuarioService.findAllUsuarios();
         model.addAttribute("usuarios", usuarios);
+        model.addAttribute("usuario", usuario);
         return "listadoUsuarios";
     }
 
@@ -53,7 +54,7 @@ public class UsuarioController {
     }
 
     @PostMapping("/registrados/{id}/toggle-bloqueo")
-    public String toggleBloqueo(@PathVariable Long id, @RequestParam boolean bloqueado) {
+    public String toggleBloqueo(@PathVariable Long id, @RequestParam(required = false) Boolean bloqueado) {
         Long idUsuarioLogeado = managerUserSession.usuarioLogeado();
         UsuarioData usuarioLogeado = null;
         if (idUsuarioLogeado != null) {
@@ -62,6 +63,16 @@ public class UsuarioController {
         if (usuarioLogeado == null || !usuarioLogeado.isAdmin()) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No tiene permisos de administrador para bloquear/desbloquear usuarios");
         }
+        
+        // Si bloqueado es null, invertimos el estado actual
+        if (bloqueado == null) {
+            UsuarioData usuario = usuarioService.findById(id);
+            if (usuario == null) {
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no encontrado");
+            }
+            bloqueado = !usuario.isBloqueado();
+        }
+        
         usuarioService.toggleBloqueo(id, bloqueado);
         return "redirect:/registrados";
     }

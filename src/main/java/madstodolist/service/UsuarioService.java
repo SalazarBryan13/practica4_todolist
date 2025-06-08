@@ -25,7 +25,7 @@ public class UsuarioService implements UserDetailsService {
 
     private static final Logger logger = LoggerFactory.getLogger(UsuarioService.class);
 
-    public enum LoginStatus {LOGIN_OK, USER_NOT_FOUND, ERROR_PASSWORD}
+    public enum LoginStatus {LOGIN_OK, USER_NOT_FOUND, ERROR_PASSWORD, USER_BLOCKED}
 
     @Autowired
     private UsuarioRepository usuarioRepository;
@@ -38,22 +38,21 @@ public class UsuarioService implements UserDetailsService {
     @Transactional(readOnly = true)
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
         logger.debug("Intentando cargar usuario por email: '{}'", email);
-        
         if (email == null || email.trim().isEmpty()) {
             logger.error("Email proporcionado es nulo o vacío");
             throw new UsernameNotFoundException("Email no puede ser nulo o vacío");
         }
-
         Optional<Usuario> usuario = usuarioRepository.findByEmail(email);
-        
         if (!usuario.isPresent()) {
             logger.error("Usuario no encontrado con email: {}", email);
             throw new UsernameNotFoundException("Usuario no encontrado con email: " + email);
         }
-
+        if (usuario.get().isBloqueado()) {
+            logger.error("Usuario bloqueado: {}", email);
+            throw new UsernameNotFoundException("Usuario bloqueado. Contacte al administrador.");
+        }
         logger.debug("Usuario encontrado: {}", email);
         logger.debug("Password del usuario: {}", usuario.get().getPassword());
-        
         return new org.springframework.security.core.userdetails.User(
             usuario.get().getEmail(),
             usuario.get().getPassword(),
@@ -69,6 +68,11 @@ public class UsuarioService implements UserDetailsService {
         if (!usuario.isPresent()) {
             logger.debug("Usuario no encontrado: {}", eMail);
             return LoginStatus.USER_NOT_FOUND;
+        }
+        
+        if (usuario.get().isBloqueado()) {
+            logger.debug("Usuario bloqueado: {}", eMail);
+            return LoginStatus.USER_BLOCKED;
         }
         
         logger.debug("Usuario encontrado, verificando contraseña");

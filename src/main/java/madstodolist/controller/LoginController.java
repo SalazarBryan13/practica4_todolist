@@ -58,6 +58,11 @@ public class LoginController {
             logger.debug("Login exitoso para usuario: {}", loginData.geteMail());
             UsuarioData usuario = usuarioService.findByEmail(loginData.geteMail());
             if (usuario != null) {
+                if (usuario.isBloqueado()) {
+                    logger.error("Usuario bloqueado: {}", loginData.geteMail());
+                    model.addAttribute("error", "Usuario bloqueado. Contacte al administrador.");
+                    return "login";
+                }
                 managerUserSession.logearUsuario(usuario.getId(), usuario.getNombre());
                 logger.debug("¿Es admin? {}", usuario.isAdmin());
                 if (usuario.isAdmin()) {
@@ -74,6 +79,8 @@ public class LoginController {
                 model.addAttribute("error", "No existe usuario");
             } else if (loginStatus == LoginStatus.ERROR_PASSWORD) {
                 model.addAttribute("error", "Contraseña incorrecta");
+            } else if (loginStatus == LoginStatus.USER_BLOCKED) {
+                model.addAttribute("error", "Usuario bloqueado. Contacte al administrador.");
             } else {
                 model.addAttribute("error", "Error en el login");
             }

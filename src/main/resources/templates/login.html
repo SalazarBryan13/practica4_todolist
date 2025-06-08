@@ -17,18 +17,18 @@
                     <div class="alert alert-danger" th:if="${param.error}">
                         <p>Error de autenticación. Por favor, verifica tus credenciales.</p>
                     </div>
-                    <div class="alert alert-danger" th:if="${error}" th:text="${error}"></div>
+                    <div th:if="${error}" class="alert alert-danger" role="alert" th:text="${error}"></div>
                     <div class="alert alert-success" th:if="${param.logout}">
                         <p>Has salido de la aplicación correctamente.</p>
                     </div>
-                    <form th:action="@{/login}" method="post">
+                    <form th:action="@{/login}" method="post" th:object="${loginData}">
                         <div class="form-group mb-4">
                             <label for="eMail">Email</label>
-                            <input type="email" class="form-control form-control-lg" id="eMail" name="eMail" required autofocus/>
+                            <input type="email" class="form-control form-control-lg" id="eMail" th:field="*{eMail}" required autofocus/>
                         </div>
                         <div class="form-group mb-4">
                             <label for="password">Contraseña</label>
-                            <input type="password" class="form-control form-control-lg" id="password" name="password" required/>
+                            <input type="password" class="form-control form-control-lg" id="password" th:field="*{password}" required/>
                         </div>
                         <div class="d-grid gap-2 mb-3">
                             <button type="submit" class="btn btn-primary btn-lg">Iniciar sesión</button>

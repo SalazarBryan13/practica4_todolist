@@ -12,6 +12,7 @@ public class UsuarioData {
     private String password;
     private Date fechaNacimiento;
     private boolean admin = false;
+    private boolean bloqueado = false;
 
     // Constructor por defecto
     public UsuarioData() {
@@ -61,6 +62,14 @@ public class UsuarioData {
 
     public void setAdmin(boolean admin) {
         this.admin = admin;
+    }
+
+    public boolean isBloqueado() {
+        return bloqueado;
+    }
+
+    public void setBloqueado(boolean bloqueado) {
+        this.bloqueado = bloqueado;
     }
 
     // Sobreescribimos equals y hashCode para que dos usuarios sean iguales

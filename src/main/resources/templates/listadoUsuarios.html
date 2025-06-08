@@ -25,24 +25,42 @@
                                     <th scope="col">Nombre</th>
                                     <th scope="col">Email</th>
                                     <th scope="col">Rol</th>
+                                    <th scope="col" class="text-center">Estado</th>
                                     <th scope="col" class="text-center">Acciones</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr th:each="usuario : ${usuarios}">
-                                    <td class="text-center" th:text="${usuario.id}"></td>
-                                    <td th:text="${usuario.nombre}"></td>
-                                    <td th:text="${usuario.email}"></td>
+                                <tr th:each="usuarioActual : ${usuarios}">
+                                    <td class="text-center" th:text="${usuarioActual.id}"></td>
+                                    <td th:text="${usuarioActual.nombre}"></td>
+                                    <td th:text="${usuarioActual.email}"></td>
                                     <td>
-                                        <span class="badge" th:classappend="${usuario.admin ? 'bg-primary' : 'bg-secondary'}"
-                                              th:text="${usuario.admin ? 'Administrador' : 'Usuario'}">
+                                        <span class="badge" th:classappend="${usuarioActual.admin ? 'bg-primary' : 'bg-secondary'}"
+                                              th:text="${usuarioActual.admin ? 'Administrador' : 'Usuario'}">
                                         </span>
                                     </td>
                                     <td class="text-center">
-                                        <a th:href="@{'/registrados/' + ${usuario.id}}" 
-                                           class="btn btn-sm btn-outline-primary">
-                                            Ver detalles
-                                        </a>
+                                        <form th:if="${usuario != null and usuario.admin and !usuarioActual.admin}"
+                                              th:action="@{/registrados/{id}/toggle-bloqueo(id=${usuarioActual.id})}"
+                                              method="post" class="d-inline">
+                                            <input type="hidden" name="bloqueado" th:value="${!usuarioActual.bloqueado}"/>
+                                            <button type="submit"
+                                                    th:class="${usuarioActual.bloqueado ? 'btn btn-danger btn-sm' : 'btn btn-success btn-sm'}"
+                                                    th:text="${usuarioActual.bloqueado ? 'Bloqueado' : 'Activo'}">
+                                            </button>
+                                        </form>
+                                        <span th:unless="${usuario != null and usuario.admin and !usuarioActual.admin}"
+                                              class="badge"
+                                              th:classappend="${usuarioActual.bloqueado ? 'bg-danger' : 'bg-success'}"
+                                              th:text="${usuarioActual.bloqueado ? 'Bloqueado' : 'Activo'}">
+                                        </span>
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="d-flex justify-content-center">
+                                            <a th:href="@{/registrados/{id}(id=${usuarioActual.id})}" class="btn btn-primary btn-sm">
+                                                <i class="bi bi-eye"></i> Ver
+                                            </a>
+                                        </div>
                                     </td>
                                 </tr>
                             </tbody>
