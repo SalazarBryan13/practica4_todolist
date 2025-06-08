@@ -71,36 +71,28 @@ public class TareaController {
     }
 
     @GetMapping("/tareas/{id}/editar")
-    public String formEditaTarea(@PathVariable(value="id") Long idTarea, @ModelAttribute TareaData tareaData,
-                                 Model model, HttpSession session) {
-
+    public String formEditaTarea(@PathVariable(value="id") Long idTarea, Model model, HttpSession session) {
         TareaData tarea = tareaService.findById(idTarea);
         if (tarea == null) {
             throw new TareaNotFoundException();
         }
-
         comprobarUsuarioLogeado(tarea.getUsuarioId());
-
         model.addAttribute("tarea", tarea);
-        tareaData.setTitulo(tarea.getTitulo());
         return "formEditarTarea";
     }
 
     @PostMapping("/tareas/{id}/editar")
-    public String grabaTareaModificada(@PathVariable(value="id") Long idTarea, @ModelAttribute TareaData tareaData,
+    public String grabaTareaModificada(@PathVariable(value="id") Long idTarea, @ModelAttribute TareaData tarea,
                                        Model model, RedirectAttributes flash, HttpSession session) {
-        TareaData tarea = tareaService.findById(idTarea);
-        if (tarea == null) {
+        TareaData tareaExistente = tareaService.findById(idTarea);
+        if (tareaExistente == null) {
             throw new TareaNotFoundException();
         }
-
-        Long idUsuario = tarea.getUsuarioId();
-
+        Long idUsuario = tareaExistente.getUsuarioId();
         comprobarUsuarioLogeado(idUsuario);
-
-        tareaService.modificaTarea(idTarea, tareaData.getTitulo());
+        tareaService.modificaTarea(idTarea, tarea.getTitulo());
         flash.addFlashAttribute("mensaje", "Tarea modificada correctamente");
-        return "redirect:/usuarios/" + tarea.getUsuarioId() + "/tareas";
+        return "redirect:/usuarios/" + tareaExistente.getUsuarioId() + "/tareas";
     }
 
     @DeleteMapping("/tareas/{id}")
