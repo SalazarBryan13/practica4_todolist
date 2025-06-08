@@ -158,4 +158,11 @@ public class UsuarioService implements UserDetailsService {
         }
         return false;
     }
+
+    @Transactional
+    public void toggleBloqueo(Long id, boolean bloqueado) {
+        Usuario usuario = usuarioRepository.findById(id).orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+        usuario.setBloqueado(bloqueado);
+        usuarioRepository.save(usuario);
+    }
 }
