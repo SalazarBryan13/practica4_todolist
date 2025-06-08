@@ -79,36 +79,38 @@ public class LoginController {
     public String registroForm(Model model) {
         logger.debug("Accediendo al formulario de registro");
         model.addAttribute("registroData", new RegistroData());
+        boolean puedeSerAdmin = !usuarioService.existeAdmin();
+        model.addAttribute("puedeSerAdmin", puedeSerAdmin);
         return "registro";
     }
 
     @PostMapping("/registro")
     public String registro(@Valid @ModelAttribute RegistroData registroData, Model model) {
         logger.debug("Intento de registro para usuario: {}", registroData.geteMail());
-        
         try {
             if (registroData.geteMail() == null || registroData.geteMail().trim().isEmpty()) {
                 model.addAttribute("error", "El email es obligatorio");
                 return "registro";
             }
-            
             if (registroData.getPassword() == null || registroData.getPassword().trim().isEmpty()) {
                 model.addAttribute("error", "La contraseña es obligatoria");
                 return "registro";
             }
-            
             UsuarioData usuarioData = new UsuarioData();
             usuarioData.setEmail(registroData.geteMail());
             usuarioData.setPassword(registroData.getPassword());
             usuarioData.setNombre(registroData.getNombre());
             usuarioData.setFechaNacimiento(registroData.getFechaNacimiento());
-            
+            boolean puedeSerAdmin = !usuarioService.existeAdmin();
+            usuarioData.setAdmin(puedeSerAdmin && registroData.isAdmin());
             UsuarioData usuario = usuarioService.registrar(usuarioData);
             logger.debug("Registro exitoso para usuario: {}", usuario.getEmail());
             return "redirect:/login";
         } catch (Exception e) {
             logger.error("Error en registro para usuario: {}. Error: {}", registroData.geteMail(), e.getMessage());
             model.addAttribute("error", e.getMessage());
+            boolean puedeSerAdmin = !usuarioService.existeAdmin();
+            model.addAttribute("puedeSerAdmin", puedeSerAdmin);
             return "registro";
         }
     }
