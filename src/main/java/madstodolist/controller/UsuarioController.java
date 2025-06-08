@@ -36,6 +36,14 @@ public class UsuarioController {
 
     @GetMapping("/registrados/{id}")
     public String descripcionUsuario(@org.springframework.web.bind.annotation.PathVariable Long id, Model model) {
+        Long idUsuarioLogeado = managerUserSession.usuarioLogeado();
+        UsuarioData usuarioLogeado = null;
+        if (idUsuarioLogeado != null) {
+            usuarioLogeado = usuarioService.findById(idUsuarioLogeado);
+        }
+        if (usuarioLogeado == null || !usuarioLogeado.isAdmin()) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No tiene permisos de administrador para ver la descripción de usuario");
+        }
         UsuarioData usuario = usuarioService.findById(id);
         model.addAttribute("usuario", usuario);
         return "descripcionUsuario";
