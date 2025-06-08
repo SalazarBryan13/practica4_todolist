@@ -19,4 +19,11 @@ public class UsuarioController {
         model.addAttribute("usuarios", usuarios);
         return "listadoUsuarios";
     }
+
+    @GetMapping("/registrados/{id}")
+    public String descripcionUsuario(@org.springframework.web.bind.annotation.PathVariable Long id, Model model) {
+        UsuarioData usuario = usuarioService.findById(id);
+        model.addAttribute("usuario", usuario);
+        return "descripcionUsuario";
+    }
 } 
