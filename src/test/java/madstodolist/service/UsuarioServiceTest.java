@@ -5,6 +5,8 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.test.context.jdbc.Sql;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -31,7 +33,6 @@ public class UsuarioServiceTest {
     public void servicioLoginUsuario() {
         // GIVEN
         // Un usuario en la BD
-
         addUsuarioBD();
 
         // WHEN
@@ -45,7 +46,6 @@ public class UsuarioServiceTest {
         UsuarioService.LoginStatus loginStatus3 = usuarioService.login("pepito.perez@gmail.com", "12345678");
 
         // THEN
-
         // el valor devuelto por el primer login es LOGIN_OK,
         assertThat(loginStatus1).isEqualTo(UsuarioService.LoginStatus.LOGIN_OK);
 
@@ -60,19 +60,19 @@ public class UsuarioServiceTest {
     public void servicioRegistroUsuario() {
         // WHEN
         // Registramos un usuario con un e-mail no existente en la base de datos,
-
         UsuarioData usuario = new UsuarioData();
         usuario.setEmail("usuario.prueba2@gmail.com");
         usuario.setPassword("12345678");
+        usuario.setNombre("Usuario Prueba");
 
         usuarioService.registrar(usuario);
 
         // THEN
         // el usuario se añade correctamente al sistema.
-
         UsuarioData usuarioBaseDatos = usuarioService.findByEmail("usuario.prueba2@gmail.com");
         assertThat(usuarioBaseDatos).isNotNull();
         assertThat(usuarioBaseDatos.getEmail()).isEqualTo("usuario.prueba2@gmail.com");
+        assertThat(usuarioBaseDatos.getNombre()).isEqualTo("Usuario Prueba");
     }
 
     @Test
@@ -80,7 +80,6 @@ public class UsuarioServiceTest {
         // WHEN, THEN
         // Si intentamos registrar un usuario con un password null,
         // se produce una excepción de tipo UsuarioServiceException
-
         UsuarioData usuario = new UsuarioData();
         usuario.setEmail("usuario.prueba@gmail.com");
 
@@ -89,18 +88,15 @@ public class UsuarioServiceTest {
         });
     }
 
-
     @Test
     public void servicioRegistroUsuarioExcepcionConEmailRepetido() {
         // GIVEN
         // Un usuario en la BD
-
         addUsuarioBD();
 
         // THEN
         // Si registramos un usuario con un e-mail ya existente en la base de datos,
-        // , se produce una excepción de tipo UsuarioServiceException
-
+        // se produce una excepción de tipo UsuarioServiceException
         UsuarioData usuario = new UsuarioData();
         usuario.setEmail("user@ua");
         usuario.setPassword("12345678");
@@ -112,45 +108,60 @@ public class UsuarioServiceTest {
 
     @Test
     public void servicioRegistroUsuarioDevuelveUsuarioConId() {
-
         // WHEN
         // Si registramos en el sistema un usuario con un e-mail no existente en la base de datos,
         // y un password no nulo,
-
         UsuarioData usuario = new UsuarioData();
         usuario.setEmail("usuario.prueba@gmail.com");
         usuario.setPassword("12345678");
+        usuario.setNombre("Usuario Prueba");
 
         UsuarioData usuarioNuevo = usuarioService.registrar(usuario);
 
         // THEN
         // se actualiza el identificador del usuario
-
         assertThat(usuarioNuevo.getId()).isNotNull();
 
         // con el identificador que se ha guardado en la BD.
-
         UsuarioData usuarioBD = usuarioService.findById(usuarioNuevo.getId());
         assertThat(usuarioBD).isEqualTo(usuarioNuevo);
     }
 
     @Test
-    public void servicioConsultaUsuarioDevuelveUsuario() {
+    public void loadUserByUsernameUsuarioExistente() {
         // GIVEN
         // Un usuario en la BD
-
-        Long usuarioId = addUsuarioBD();
+        addUsuarioBD();
 
         // WHEN
-        // recuperamos un usuario usando su e-mail,
-
-        UsuarioData usuario = usuarioService.findByEmail("user@ua");
+        // Intentamos cargar el usuario por su email
+        UserDetails userDetails = usuarioService.loadUserByUsername("user@ua");
 
         // THEN
-        // el usuario obtenido es el correcto.
+        // El usuario se carga correctamente con sus roles
+        assertThat(userDetails).isNotNull();
+        assertThat(userDetails.getUsername()).isEqualTo("user@ua");
+        assertThat(userDetails.getAuthorities()).hasSize(1);
+        assertThat(userDetails.getAuthorities().iterator().next().getAuthority()).isEqualTo("ROLE_USER");
+    }
 
-        assertThat(usuario.getId()).isEqualTo(usuarioId);
-        assertThat(usuario.getEmail()).isEqualTo("user@ua");
-        assertThat(usuario.getNombre()).isEqualTo("Usuario Ejemplo");
+    @Test
+    public void loadUserByUsernameUsuarioNoExistente() {
+        // WHEN, THEN
+        // Si intentamos cargar un usuario que no existe,
+        // se produce una excepción de tipo UsernameNotFoundException
+        Assertions.assertThrows(UsernameNotFoundException.class, () -> {
+            usuarioService.loadUserByUsername("noexiste@ua");
+        });
+    }
+
+    @Test
+    public void loadUserByUsernameEmailNulo() {
+        // WHEN, THEN
+        // Si intentamos cargar un usuario con email nulo,
+        // se produce una excepción de tipo UsernameNotFoundException
+        Assertions.assertThrows(UsernameNotFoundException.class, () -> {
+            usuarioService.loadUserByUsername(null);
+        });
     }
 }

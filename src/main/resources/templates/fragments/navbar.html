@@ -12,6 +12,7 @@
             </div>
             <!-- DERECHA: Login/Registro o Usuario -->
             <div class="d-flex align-items-center">
+                <!-- Usuario no autenticado -->
                 <ul class="navbar-nav" th:if="${idUsuarioLogeado == null}">
                     <li class="nav-item">
                         <a class="nav-link" th:href="@{/login}">Login</a>
@@ -20,13 +21,14 @@
                         <a class="nav-link" th:href="@{/registro}">Registro</a>
                     </li>
                 </ul>
+                <!-- Usuario autenticado -->
                 <ul class="navbar-nav" th:if="${idUsuarioLogeado != null}">
                     <li class="nav-item">
                         <a class="nav-link" th:href="@{/usuarios/{id}/tareas(id=${idUsuarioLogeado})}">Tareas</a>
                     </li>
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button"
-                           data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" th:text="${usuario.nombre}">
+                           data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" th:text="${usuario != null ? usuario.nombre : ''}">
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
                             <li><a class="dropdown-item" href="#">Cuenta</a></li>

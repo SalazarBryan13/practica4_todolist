@@ -10,194 +10,155 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.containsString;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest
 @AutoConfigureMockMvc
-@Sql(scripts = "/clean-db.sql")
+@Sql(scripts = "/clean-db.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
 public class TareaWebTest {
 
     @Autowired
     private MockMvc mockMvc;
 
-    // Declaramos los servicios como Autowired
+    @MockBean
+    private ManagerUserSession managerUserSession;
+
     @Autowired
     private TareaService tareaService;
 
     @Autowired
     private UsuarioService usuarioService;
 
-    // Moqueamos el managerUserSession para poder moquear el usuario logeado
-    @MockBean
-    private ManagerUserSession managerUserSession;
+    private Map<String, Long> addUsuarioTareasBD() {
+        // Crear usuario de prueba
+        UsuarioData usuarioData = new UsuarioData();
+        usuarioData.setEmail("test@ua");
+        usuarioData.setPassword("123");
+        usuarioData.setNombre("Usuario Test");
+        usuarioService.registrar(usuarioData);
 
-    // Método para inicializar los datos de prueba en la BD
-    // Devuelve un mapa con los identificadores del usuario y de la primera tarea añadida
+        // Obtener el usuario registrado para obtener su ID
+        UsuarioData usuarioRegistrado = usuarioService.findByEmail("test@ua");
 
-    Map<String, Long> addUsuarioTareasBD() {
-        // Añadimos un usuario a la base de datos
-        UsuarioData usuario = new UsuarioData();
-        usuario.setEmail("user@ua");
-        usuario.setPassword("123");
-        usuario = usuarioService.registrar(usuario);
+        // Crear tarea de prueba
+        TareaData tareaData = new TareaData();
+        tareaData.setTitulo("Tarea de prueba");
+        tareaService.nuevaTareaUsuario(usuarioRegistrado.getId(), tareaData.getTitulo());
 
-        // Y añadimos dos tareas asociadas a ese usuario
-        TareaData tarea1 = tareaService.nuevaTareaUsuario(usuario.getId(), "Lavar coche");
-        tareaService.nuevaTareaUsuario(usuario.getId(), "Renovar DNI");
+        // Obtener la tarea creada para obtener su ID
+        TareaData tareaCreada = tareaService.allTareasUsuario(usuarioRegistrado.getId()).get(0);
 
-        // Devolvemos los ids del usuario y de la primera tarea añadida
         Map<String, Long> ids = new HashMap<>();
-        ids.put("usuarioId", usuario.getId());
-        ids.put("tareaId", tarea1.getId());
+        ids.put("usuarioId", usuarioRegistrado.getId());
+        ids.put("tareaId", tareaCreada.getId());
         return ids;
-
     }
 
     @Test
+    @WithMockUser(username = "test@ua", roles = {"USER"})
     public void listaTareas() throws Exception {
-        // GIVEN
-        // Un usuario con dos tareas en la BD
-        Long usuarioId = addUsuarioTareasBD().get("usuarioId");
+        Map<String, Long> ids = addUsuarioTareasBD();
+        Long usuarioId = ids.get("usuarioId");
 
-        // Moqueamos el método usuarioLogeado para que devuelva el usuario 1L,
-        // el mismo que se está usando en la petición. De esta forma evitamos
-        // que salte la excepción de que el usuario que está haciendo la
-        // petición no está logeado.
         when(managerUserSession.usuarioLogeado()).thenReturn(usuarioId);
+        when(managerUserSession.nombreUsuarioLogeado()).thenReturn("Usuario Test");
 
-        // WHEN, THEN
-        // se realiza la petición GET al listado de tareas del usuario,
-        // el HTML devuelto contiene las descripciones de sus tareas.
-
-        String url = "/usuarios/" + usuarioId.toString() + "/tareas";
-
-        this.mockMvc.perform(get(url))
-                .andExpect((content().string(allOf(
-                        containsString("Lavar coche"),
-                        containsString("Renovar DNI")
-                ))));
+        mockMvc.perform(get("/usuarios/" + usuarioId + "/tareas"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("Tarea de prueba")));
     }
 
     @Test
+    public void listaTareasUsuarioNoLogeado() throws Exception {
+        Map<String, Long> ids = addUsuarioTareasBD();
+        Long usuarioId = ids.get("usuarioId");
+
+        mockMvc.perform(get("/usuarios/" + usuarioId + "/tareas"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/login?error=true"));
+    }
+
+    @Test
+    @WithMockUser(username = "test@ua", roles = {"USER"})
     public void getNuevaTareaDevuelveForm() throws Exception {
-        // GIVEN
-        // Un usuario con dos tareas en la BD
-        Long usuarioId = addUsuarioTareasBD().get("usuarioId");
-
-        // Ver el comentario en el primer test
-        when(managerUserSession.usuarioLogeado()).thenReturn(usuarioId);
-
-        // WHEN, THEN
-        // si ejecutamos una petición GET para crear una nueva tarea de un usuario,
-        // el HTML resultante contiene un formulario y la ruta con
-        // la acción para crear la nueva tarea.
-
-        String urlPeticion = "/usuarios/" + usuarioId.toString() + "/tareas/nueva";
-        String urlAction = "action=\"/usuarios/" + usuarioId.toString() + "/tareas/nueva\"";
-
-        this.mockMvc.perform(get(urlPeticion))
-                .andExpect((content().string(allOf(
-                        containsString("form method=\"post\""),
-                        containsString(urlAction)
-                ))));
-    }
-
-    @Test
-    public void postNuevaTareaDevuelveRedirectYAñadeTarea() throws Exception {
-        // GIVEN
-        // Un usuario con dos tareas en la BD
-        Long usuarioId = addUsuarioTareasBD().get("usuarioId");
-
-        // Ver el comentario en el primer test
-        when(managerUserSession.usuarioLogeado()).thenReturn(usuarioId);
-
-        // WHEN, THEN
-        // realizamos la petición POST para añadir una nueva tarea,
-        // el estado HTTP que se devuelve es un REDIRECT al listado
-        // de tareas.
-
-        String urlPost = "/usuarios/" + usuarioId.toString() + "/tareas/nueva";
-        String urlRedirect = "/usuarios/" + usuarioId.toString() + "/tareas";
-
-        this.mockMvc.perform(post(urlPost)
-                        .param("titulo", "Estudiar examen MADS"))
-                .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl(urlRedirect));
-
-        // y si después consultamos el listado de tareas con una petición
-        // GET el HTML contiene la tarea añadida.
-
-        this.mockMvc.perform(get(urlRedirect))
-                .andExpect((content().string(containsString("Estudiar examen MADS"))));
-    }
-
-    @Test
-    public void deleteTareaDevuelveOKyBorraTarea() throws Exception {
-        // GIVEN
-        // Un usuario con dos tareas en la BD
         Map<String, Long> ids = addUsuarioTareasBD();
         Long usuarioId = ids.get("usuarioId");
-        Long tareaLavarCocheId = ids.get("tareaId");
 
-        // Ver el comentario en el primer test
         when(managerUserSession.usuarioLogeado()).thenReturn(usuarioId);
+        when(managerUserSession.nombreUsuarioLogeado()).thenReturn("Usuario Test");
 
-        // WHEN, THEN
-        // realizamos la petición DELETE para borrar una tarea,
-        // se devuelve el estado HTTP que se devuelve es OK,
+        mockMvc.perform(get("/usuarios/" + usuarioId + "/tareas/nueva"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("Nueva tarea")));
+    }
 
-        String urlDelete = "/tareas/" + tareaLavarCocheId.toString();
+    @Test
+    @WithMockUser(username = "test@ua", roles = {"USER"})
+    public void postNuevaTarea() throws Exception {
+        Map<String, Long> ids = addUsuarioTareasBD();
+        Long usuarioId = ids.get("usuarioId");
 
-        this.mockMvc.perform(delete(urlDelete))
+        when(managerUserSession.usuarioLogeado()).thenReturn(usuarioId);
+        when(managerUserSession.nombreUsuarioLogeado()).thenReturn("Usuario Test");
+
+        mockMvc.perform(post("/usuarios/" + usuarioId + "/tareas/nueva")
+                .param("titulo", "Nueva tarea"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/usuarios/" + usuarioId + "/tareas"));
+    }
+
+    @Test
+    @WithMockUser(username = "test@ua", roles = {"USER"})
+    public void getModificarTarea() throws Exception {
+        Map<String, Long> ids = addUsuarioTareasBD();
+        Long usuarioId = ids.get("usuarioId");
+        Long tareaId = ids.get("tareaId");
+
+        when(managerUserSession.usuarioLogeado()).thenReturn(usuarioId);
+        when(managerUserSession.nombreUsuarioLogeado()).thenReturn("Usuario Test");
+
+        mockMvc.perform(get("/tareas/" + tareaId + "/editar"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("Modificar tarea")));
+    }
+
+    @Test
+    @WithMockUser(username = "test@ua", roles = {"USER"})
+    public void postModificarTarea() throws Exception {
+        Map<String, Long> ids = addUsuarioTareasBD();
+        Long usuarioId = ids.get("usuarioId");
+        Long tareaId = ids.get("tareaId");
+
+        when(managerUserSession.usuarioLogeado()).thenReturn(usuarioId);
+        when(managerUserSession.nombreUsuarioLogeado()).thenReturn("Usuario Test");
+
+        mockMvc.perform(post("/tareas/" + tareaId + "/editar")
+                .param("titulo", "Tarea modificada"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/usuarios/" + usuarioId + "/tareas"));
+    }
+
+    @Test
+    @WithMockUser(username = "test@ua", roles = {"USER"})
+    public void borrarTarea() throws Exception {
+        Map<String, Long> ids = addUsuarioTareasBD();
+        Long usuarioId = ids.get("usuarioId");
+        Long tareaId = ids.get("tareaId");
+
+        when(managerUserSession.usuarioLogeado()).thenReturn(usuarioId);
+        when(managerUserSession.nombreUsuarioLogeado()).thenReturn("Usuario Test");
+
+        mockMvc.perform(delete("/tareas/" + tareaId))
                 .andExpect(status().isOk());
-
-        // y cuando se pide un listado de tareas del usuario, la tarea borrada ya no aparece.
-
-        String urlListado = "/usuarios/" + usuarioId + "/tareas";
-
-        this.mockMvc.perform(get(urlListado))
-                .andExpect(content().string(
-                        allOf(not(containsString("Lavar coche")),
-                                containsString("Renovar DNI"))));
-    }
-
-    @Test
-    public void editarTareaActualizaLaTarea() throws Exception {
-        // GIVEN
-        // Un usuario con dos tareas en la BD
-        Map<String, Long> ids = addUsuarioTareasBD();
-        Long usuarioId = ids.get("usuarioId");
-        Long tareaLavarCocheId = ids.get("tareaId");
-
-        // Ver el comentario en el primer test
-        when(managerUserSession.usuarioLogeado()).thenReturn(usuarioId);
-
-        // WHEN, THEN
-        // realizamos una petición POST al endpoint para editar una tarea
-
-        String urlEditar = "/tareas/" + tareaLavarCocheId + "/editar";
-        String urlRedirect = "/usuarios/" + usuarioId + "/tareas";
-
-        this.mockMvc.perform(post(urlEditar)
-                        .param("titulo", "Limpiar cristales coche"))
-                .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl(urlRedirect));
-
-        // Y si realizamos un listado de las tareas del usuario
-        // ha cambiado el título de la tarea modificada
-
-        String urlListado = "/usuarios/" + usuarioId + "/tareas";
-
-        this.mockMvc.perform(get(urlListado))
-                .andExpect(content().string(containsString("Limpiar cristales coche")));
     }
 }

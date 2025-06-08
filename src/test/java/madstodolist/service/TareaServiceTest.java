@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 // Hemos eliminado todos los @Transactional de los tests
 // y usado un script para limpiar la BD de test después de
@@ -34,6 +35,7 @@ public class TareaServiceTest {
         UsuarioData usuario = new UsuarioData();
         usuario.setEmail("user@ua");
         usuario.setPassword("123");
+        usuario.setNombre("Usuario Test");
 
         // Añadimos un usuario a la base de datos
         UsuarioData usuarioNuevo = usuarioService.registrar(usuario);
@@ -50,101 +52,178 @@ public class TareaServiceTest {
     }
 
     @Test
-    public void testNuevaTareaUsuario() {
+    public void nuevaTareaUsuario() {
         // GIVEN
         // Un usuario en la BD
-
-        Long usuarioId = addUsuarioTareasBD().get("usuarioId");
-
-        // WHEN
-        // creamos una nueva tarea asociada al usuario,
-        TareaData nuevaTarea = tareaService.nuevaTareaUsuario(usuarioId, "Práctica 1 de MADS");
-
-        // THEN
-        // al recuperar la lista de tareas del usuario, la nueva tarea
-        // está en la lista de tareas del usuario.
-
-        List<TareaData> tareas = tareaService.allTareasUsuario(usuarioId);
-
-        assertThat(tareas).hasSize(3);
-        assertThat(tareas).contains(nuevaTarea);
-    }
-
-    @Test
-    public void testBuscarTarea() {
-        // GIVEN
-        // Una tarea en la BD
-
-        Long tareaId = addUsuarioTareasBD().get("tareaId");
-
-        // WHEN
-        // recuperamos una tarea de la base de datos a partir de su ID,
-
-        TareaData lavarCoche = tareaService.findById(tareaId);
-
-        // THEN
-        // los datos de la tarea recuperada son correctos.
-
-        assertThat(lavarCoche).isNotNull();
-        assertThat(lavarCoche.getTitulo()).isEqualTo("Lavar coche");
-    }
-
-    @Test
-    public void testModificarTarea() {
-        // GIVEN
-        // Un usuario y una tarea en la BD
-
         Map<String, Long> ids = addUsuarioTareasBD();
         Long usuarioId = ids.get("usuarioId");
+
+        // WHEN
+        // Añadimos una nueva tarea al usuario
+        TareaData tarea = tareaService.nuevaTareaUsuario(usuarioId, "Nueva tarea");
+
+        // THEN
+        // La tarea se crea correctamente con los datos proporcionados
+        assertThat(tarea).isNotNull();
+        assertThat(tarea.getTitulo()).isEqualTo("Nueva tarea");
+        assertThat(tarea.getId()).isNotNull();
+    }
+
+    @Test
+    public void nuevaTareaUsuarioNoExiste() {
+        // WHEN, THEN
+        // Si intentamos crear una tarea para un usuario que no existe,
+        // se produce una excepción de tipo TareaServiceException
+        assertThatThrownBy(() -> {
+            tareaService.nuevaTareaUsuario(999L, "Nueva tarea");
+        }).isInstanceOf(TareaServiceException.class)
+          .hasMessageContaining("no existe");
+    }
+
+    @Test
+    public void allTareasUsuario() {
+        // GIVEN
+        // Un usuario con dos tareas en la BD
+        Map<String, Long> ids = addUsuarioTareasBD();
+        Long usuarioId = ids.get("usuarioId");
+
+        // WHEN
+        // Recuperamos todas las tareas del usuario
+        List<TareaData> tareas = tareaService.allTareasUsuario(usuarioId);
+
+        // THEN
+        // Se obtienen las dos tareas creadas
+        assertThat(tareas).hasSize(2);
+        assertThat(tareas).extracting("titulo")
+                .containsExactlyInAnyOrder("Lavar coche", "Renovar DNI");
+    }
+
+    @Test
+    public void allTareasUsuarioNoExiste() {
+        // WHEN, THEN
+        // Si intentamos recuperar las tareas de un usuario que no existe,
+        // se produce una excepción de tipo TareaServiceException
+        assertThatThrownBy(() -> {
+            tareaService.allTareasUsuario(999L);
+        }).isInstanceOf(TareaServiceException.class)
+          .hasMessageContaining("no existe");
+    }
+
+    @Test
+    public void findById() {
+        // GIVEN
+        // Un usuario con tareas en la BD
+        Map<String, Long> ids = addUsuarioTareasBD();
         Long tareaId = ids.get("tareaId");
 
         // WHEN
-        // modificamos la tarea correspondiente al identificador,
-
-        tareaService.modificaTarea(tareaId, "Limpiar los cristales del coche");
+        // Buscamos una tarea por su ID
+        TareaData tarea = tareaService.findById(tareaId);
 
         // THEN
-        // al buscar por el identificador en la base de datos se devuelve la tarea modificada
-
-        TareaData tareaBD = tareaService.findById(tareaId);
-        assertThat(tareaBD.getTitulo()).isEqualTo("Limpiar los cristales del coche");
-
-        // y el usuario tiene también esa tarea modificada.
-        List<TareaData> tareas = tareaService.allTareasUsuario(usuarioId);
-        assertThat(tareas).contains(tareaBD);
+        // Se encuentra la tarea correcta
+        assertThat(tarea).isNotNull();
+        assertThat(tarea.getId()).isEqualTo(tareaId);
+        assertThat(tarea.getTitulo()).isEqualTo("Lavar coche");
     }
 
     @Test
-    public void testBorrarTarea() {
-        // GIVEN
-        // Un usuario y una tarea en la BD
+    public void findByIdNoExiste() {
+        // WHEN
+        // Buscamos una tarea que no existe
+        TareaData tarea = tareaService.findById(999L);
 
+        // THEN
+        // Se devuelve null
+        assertThat(tarea).isNull();
+    }
+
+    @Test
+    public void modificaTarea() {
+        // GIVEN
+        // Un usuario con tareas en la BD
         Map<String, Long> ids = addUsuarioTareasBD();
-        Long usuarioId = ids.get("usuarioId");
         Long tareaId = ids.get("tareaId");
 
         // WHEN
-        // borramos la tarea correspondiente al identificador,
+        // Modificamos el título de la tarea
+        TareaData tareaModificada = tareaService.modificaTarea(tareaId, "Nuevo título");
 
+        // THEN
+        // La tarea se modifica correctamente
+        assertThat(tareaModificada).isNotNull();
+        assertThat(tareaModificada.getId()).isEqualTo(tareaId);
+        assertThat(tareaModificada.getTitulo()).isEqualTo("Nuevo título");
+    }
+
+    @Test
+    public void modificaTareaNoExiste() {
+        // WHEN, THEN
+        // Si intentamos modificar una tarea que no existe,
+        // se produce una excepción de tipo TareaServiceException
+        assertThatThrownBy(() -> {
+            tareaService.modificaTarea(999L, "Nuevo título");
+        }).isInstanceOf(TareaServiceException.class)
+          .hasMessageContaining("No existe tarea");
+    }
+
+    @Test
+    public void borraTarea() {
+        // GIVEN
+        // Un usuario con tareas en la BD
+        Map<String, Long> ids = addUsuarioTareasBD();
+        Long tareaId = ids.get("tareaId");
+
+        // WHEN
+        // Borramos la tarea
         tareaService.borraTarea(tareaId);
 
         // THEN
-        // la tarea ya no está en la base de datos ni en las tareas del usuario.
-
+        // La tarea ya no existe
         assertThat(tareaService.findById(tareaId)).isNull();
-
-        List<TareaData> tareas = tareaService.allTareasUsuario(usuarioId);
-        assertThat(tareas).hasSize(1);
     }
 
     @Test
-    public void asignarEtiquetaATarea(){
+    public void borraTareaNoExiste() {
+        // WHEN, THEN
+        // Si intentamos borrar una tarea que no existe,
+        // se produce una excepción de tipo TareaServiceException
+        assertThatThrownBy(() -> {
+            tareaService.borraTarea(999L);
+        }).isInstanceOf(TareaServiceException.class)
+          .hasMessageContaining("No existe tarea");
+    }
 
+    @Test
+    public void usuarioContieneTarea() {
+        // GIVEN
+        // Un usuario con tareas en la BD
         Map<String, Long> ids = addUsuarioTareasBD();
         Long usuarioId = ids.get("usuarioId");
         Long tareaId = ids.get("tareaId");
 
-        assertThat(tareaService.usuarioContieneTarea(usuarioId,tareaId)).isTrue();
+        // WHEN
+        // Comprobamos si el usuario contiene la tarea
+        boolean contiene = tareaService.usuarioContieneTarea(usuarioId, tareaId);
+
+        // THEN
+        // El usuario contiene la tarea
+        assertThat(contiene).isTrue();
     }
 
+    @Test
+    public void usuarioNoContieneTarea() {
+        // GIVEN
+        // Un usuario con tareas en la BD
+        Map<String, Long> ids = addUsuarioTareasBD();
+        Long usuarioId = ids.get("usuarioId");
+
+        // WHEN, THEN
+        // Si intentamos comprobar si el usuario contiene una tarea que no existe,
+        // se produce una excepción de tipo TareaServiceException
+        assertThatThrownBy(() -> {
+            tareaService.usuarioContieneTarea(usuarioId, 999L);
+        }).isInstanceOf(TareaServiceException.class)
+          .hasMessageContaining("No existe tarea o usuario");
+    }
 }

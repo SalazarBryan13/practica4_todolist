@@ -21,8 +21,8 @@ public class AcercaDeController {
         Long idUsuarioLogeado = managerUserSession.usuarioLogeado();
         if (idUsuarioLogeado != null) {
             model.addAttribute("usuario", usuarioService.findById(idUsuarioLogeado));
-            model.addAttribute("idUsuarioLogeado", idUsuarioLogeado);
         }
+        model.addAttribute("idUsuarioLogeado", idUsuarioLogeado);
         return "about";
     }
 } 
