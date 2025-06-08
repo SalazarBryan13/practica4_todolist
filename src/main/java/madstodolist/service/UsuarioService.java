@@ -103,10 +103,13 @@ public class UsuarioService implements UserDetailsService {
 
         Usuario usuarioNuevo = modelMapper.map(usuario, Usuario.class);
         usuarioNuevo.setPassword(passwordEncoder.encode(usuario.getPassword()));
+        usuarioNuevo.setAdmin(usuario.isAdmin());
         usuarioNuevo = usuarioRepository.save(usuarioNuevo);
         
         logger.debug("Usuario registrado exitosamente: {}", usuario.getEmail());
-        return modelMapper.map(usuarioNuevo, UsuarioData.class);
+        UsuarioData usuarioData = modelMapper.map(usuarioNuevo, UsuarioData.class);
+        usuarioData.setAdmin(usuarioNuevo.isAdmin());
+        return usuarioData;
     }
 
     @Transactional(readOnly = true)
