@@ -5,7 +5,6 @@ import madstodolist.dto.LoginData;
 import madstodolist.dto.RegistroData;
 import madstodolist.dto.UsuarioData;
 import madstodolist.service.UsuarioService;
-<<<<<<< HEAD
 import madstodolist.service.UsuarioService.LoginStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,30 +14,19 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.RememberMeServices;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-=======
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.validation.BindingResult;
->>>>>>> 9207783e011d3b7383852f076cef692c1c05ebab
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-<<<<<<< HEAD
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import javax.servlet.http.HttpServletRequest;
-=======
-
->>>>>>> 9207783e011d3b7383852f076cef692c1c05ebab
 import javax.servlet.http.HttpSession;
 import javax.validation.Valid;
 
 @Controller
 public class LoginController {
 
-<<<<<<< HEAD
     private static final Logger logger = LoggerFactory.getLogger(LoginController.class);
 
     @Autowired
@@ -50,22 +38,11 @@ public class LoginController {
     @GetMapping("/")
     public String home(Model model) {
         logger.debug("Redirigiendo a la página de login");
-=======
-    @Autowired
-    UsuarioService usuarioService;
-
-    @Autowired
-    ManagerUserSession managerUserSession;
-
-    @GetMapping("/")
-    public String home(Model model) {
->>>>>>> 9207783e011d3b7383852f076cef692c1c05ebab
         return "redirect:/login";
     }
 
     @GetMapping("/login")
     public String loginForm(Model model) {
-<<<<<<< HEAD
         logger.debug("Accediendo al formulario de login");
         model.addAttribute("loginData", new LoginData());
         return "login";
@@ -96,37 +73,10 @@ public class LoginController {
             }
             return "login";
         }
-=======
-        model.addAttribute("loginData", new LoginData());
-        return "formLogin";
-    }
-
-    @PostMapping("/login")
-    public String loginSubmit(@ModelAttribute LoginData loginData, Model model, HttpSession session) {
-
-        // Llamada al servicio para comprobar si el login es correcto
-        UsuarioService.LoginStatus loginStatus = usuarioService.login(loginData.geteMail(), loginData.getPassword());
-
-        if (loginStatus == UsuarioService.LoginStatus.LOGIN_OK) {
-            UsuarioData usuario = usuarioService.findByEmail(loginData.geteMail());
-
-            managerUserSession.logearUsuario(usuario.getId());
-
-            return "redirect:/usuarios/" + usuario.getId() + "/tareas";
-        } else if (loginStatus == UsuarioService.LoginStatus.USER_NOT_FOUND) {
-            model.addAttribute("error", "No existe usuario");
-            return "formLogin";
-        } else if (loginStatus == UsuarioService.LoginStatus.ERROR_PASSWORD) {
-            model.addAttribute("error", "Contraseña incorrecta");
-            return "formLogin";
-        }
-        return "formLogin";
->>>>>>> 9207783e011d3b7383852f076cef692c1c05ebab
     }
 
     @GetMapping("/registro")
     public String registroForm(Model model) {
-<<<<<<< HEAD
         logger.debug("Accediendo al formulario de registro");
         model.addAttribute("registroData", new RegistroData());
         return "registro";
@@ -151,6 +101,7 @@ public class LoginController {
             usuarioData.setEmail(registroData.geteMail());
             usuarioData.setPassword(registroData.getPassword());
             usuarioData.setNombre(registroData.getNombre());
+            usuarioData.setFechaNacimiento(registroData.getFechaNacimiento());
             
             UsuarioData usuario = usuarioService.registrar(usuarioData);
             logger.debug("Registro exitoso para usuario: {}", usuario.getEmail());
@@ -185,55 +136,4 @@ public class LoginController {
         model.addAttribute("usuario", usuario);
         return "perfil";
     }
-=======
-        model.addAttribute("registroData", new RegistroData());
-        return "formRegistro";
-    }
-
-   @PostMapping("/registro")
-   public String registroSubmit(@Valid RegistroData registroData, BindingResult result, Model model) {
-
-        if (result.hasErrors()) {
-            return "formRegistro";
-        }
-
-        if (usuarioService.findByEmail(registroData.getEmail()) != null) {
-            model.addAttribute("registroData", registroData);
-            model.addAttribute("error", "El usuario " + registroData.getEmail() + " ya existe");
-            return "formRegistro";
-        }
-
-        UsuarioData usuario = new UsuarioData();
-        usuario.setEmail(registroData.getEmail());
-        usuario.setPassword(registroData.getPassword());
-        usuario.setFechaNacimiento(registroData.getFechaNacimiento());
-        usuario.setNombre(registroData.getNombre());
-
-        usuarioService.registrar(usuario);
-        return "redirect:/login";
-   }
-
-   @GetMapping("/logout")
-   public String logout(HttpSession session) {
-        managerUserSession.logout();
-        return "redirect:/login";
-   }
-
-   @GetMapping("/usuarios/{id}/perfil")
-   public String perfilUsuario(@PathVariable(value = "id") Long idUsuario, Model model, HttpSession session) {
-       Long idUsuarioLogeado = managerUserSession.usuarioLogeado();
-       
-       if (idUsuarioLogeado == null) {
-           return "redirect:/login";
-       }
-
-       if (!idUsuarioLogeado.equals(idUsuario)) {
-           return "redirect:/usuarios/" + idUsuarioLogeado + "/perfil";
-       }
-
-       UsuarioData usuario = usuarioService.findById(idUsuario);
-       model.addAttribute("usuario", usuario);
-       return "perfil";
-   }
->>>>>>> 9207783e011d3b7383852f076cef692c1c05ebab
 }
