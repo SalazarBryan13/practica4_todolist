@@ -141,4 +141,14 @@ public class UsuarioService implements UserDetailsService {
         }
         return usuarios;
     }
+
+    @Transactional(readOnly = true)
+    public boolean existeAdmin() {
+        for (Usuario usuario : usuarioRepository.findAll()) {
+            if (usuario.isAdmin()) {
+                return true;
+            }
+        }
+        return false;
+    }
 }
