@@ -12,13 +12,10 @@ public class UsuarioData {
     private String password;
     private Date fechaNacimiento;
 
-<<<<<<< HEAD
     // Constructor por defecto
     public UsuarioData() {
     }
 
-=======
->>>>>>> 9207783e011d3b7383852f076cef692c1c05ebab
     // Getters y setters
 
     public Long getId() {

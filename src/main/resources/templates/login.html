@@ -4,7 +4,16 @@
 <head th:replace="fragments :: head (titulo='Login')"></head>
 
 <body style="background-color: #f8f9fa; min-height: 100vh;">
-<div th:replace="fragments/navbar :: navbar"></div>
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container-fluid">
+        <a class="navbar-brand" th:href="@{/about}">ToDoList</a>
+        <div class="collapse navbar-collapse">
+            <ul class="navbar-nav me-auto">
+                <li class="nav-item"><a class="nav-link" th:href="@{/registro}">Registro</a></li>
+            </ul>
+        </div>
+    </div>
+</nav>
 <div class="container d-flex align-items-center justify-content-center" style="min-height: 90vh;">
     <div class="row w-100">
         <div class="col-md-6 offset-md-3">

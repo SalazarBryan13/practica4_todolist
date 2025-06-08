@@ -1,6 +1,5 @@
 package madstodolist.config;
 
-<<<<<<< HEAD
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
@@ -87,18 +86,5 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
             logger.error("Error configurando autenticación global", e);
             throw e;
         }
-=======
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
-
-@Configuration
-public class SecurityConfig {
-
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
->>>>>>> 9207783e011d3b7383852f076cef692c1c05ebab
     }
 } 

@@ -4,8 +4,8 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>es.ua.mads</groupId>
-    <artifactId>mads-todolist</artifactId>
-    <version>1.0.0</version>
+    <artifactId>epn-todolist-Bryan_Salazar</artifactId>
+    <version>1.0.1-SNAPSHOT</version>
 
     <parent>
         <groupId>org.springframework.boot</groupId>
@@ -45,13 +45,10 @@
             <artifactId>modelmapper</artifactId>
             <version>3.0.0</version>
         </dependency>
-<<<<<<< HEAD
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-security</artifactId>
         </dependency>
-=======
->>>>>>> 9207783e011d3b7383852f076cef692c1c05ebab
     </dependencies>
 
     <build>
