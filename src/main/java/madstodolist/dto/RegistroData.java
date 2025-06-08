@@ -21,14 +21,16 @@ public class RegistroData {
 
     @NotNull(message = "La fecha de nacimiento no puede estar vacía")
     @Past(message = "La fecha de nacimiento debe ser una fecha pasada")
-    @DateTimeFormat(pattern = "dd-MM-yyyy")
+    @DateTimeFormat(pattern = "yyyy-MM-dd")
     private Date fechaNacimiento;
 
-    public String getEmail() {
+    private boolean admin = false;
+
+    public String geteMail() {
         return eMail;
     }
 
-    public void setEmail(String eMail) {
+    public void seteMail(String eMail) {
         this.eMail = eMail;
     }
 
@@ -54,5 +56,13 @@ public class RegistroData {
 
     public void setFechaNacimiento(Date fechaNacimiento) {
         this.fechaNacimiento = fechaNacimiento;
+    }
+
+    public boolean isAdmin() {
+        return admin;
+    }
+
+    public void setAdmin(boolean admin) {
+        this.admin = admin;
     }
 }

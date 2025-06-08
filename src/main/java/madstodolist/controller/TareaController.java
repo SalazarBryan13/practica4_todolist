@@ -7,6 +7,8 @@ import madstodolist.dto.TareaData;
 import madstodolist.dto.UsuarioData;
 import madstodolist.service.TareaService;
 import madstodolist.service.UsuarioService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -18,6 +20,8 @@ import java.util.List;
 
 @Controller
 public class TareaController {
+
+    private static final Logger logger = LoggerFactory.getLogger(TareaController.class);
 
     @Autowired
     UsuarioService usuarioService;
@@ -71,36 +75,43 @@ public class TareaController {
     }
 
     @GetMapping("/tareas/{id}/editar")
-    public String formEditaTarea(@PathVariable(value="id") Long idTarea, @ModelAttribute TareaData tareaData,
-                                 Model model, HttpSession session) {
-
+    public String formEditaTarea(@PathVariable(value="id") Long idTarea, Model model, HttpSession session) {
+        logger.debug("Entrando a formEditaTarea con idTarea: {}", idTarea);
         TareaData tarea = tareaService.findById(idTarea);
+        logger.debug("Tarea encontrada: {}", tarea);
         if (tarea == null) {
+            logger.error("No se encontró la tarea con id: {}", idTarea);
             throw new TareaNotFoundException();
         }
-
+        logger.debug("UsuarioId de la tarea: {}", tarea.getUsuarioId());
         comprobarUsuarioLogeado(tarea.getUsuarioId());
-
         model.addAttribute("tarea", tarea);
-        tareaData.setTitulo(tarea.getTitulo());
+        logger.debug("Atributo 'tarea' añadido al modelo: {}", tarea);
+        Long idUsuarioLogeado = managerUserSession.usuarioLogeado();
+        if (idUsuarioLogeado != null) {
+            UsuarioData usuario = usuarioService.findById(idUsuarioLogeado);
+            model.addAttribute("usuario", usuario);
+        }
         return "formEditarTarea";
     }
 
     @PostMapping("/tareas/{id}/editar")
-    public String grabaTareaModificada(@PathVariable(value="id") Long idTarea, @ModelAttribute TareaData tareaData,
+    public String grabaTareaModificada(@PathVariable(value="id") Long idTarea, @ModelAttribute TareaData tarea,
                                        Model model, RedirectAttributes flash, HttpSession session) {
-        TareaData tarea = tareaService.findById(idTarea);
-        if (tarea == null) {
+        logger.debug("Entrando a grabaTareaModificada con idTarea: {} y titulo: {}", idTarea, tarea.getTitulo());
+        TareaData tareaExistente = tareaService.findById(idTarea);
+        logger.debug("Tarea existente encontrada: {}", tareaExistente);
+        if (tareaExistente == null) {
+            logger.error("No se encontró la tarea con id: {}", idTarea);
             throw new TareaNotFoundException();
         }
-
-        Long idUsuario = tarea.getUsuarioId();
-
+        Long idUsuario = tareaExistente.getUsuarioId();
+        logger.debug("UsuarioId de la tarea existente: {}", idUsuario);
         comprobarUsuarioLogeado(idUsuario);
-
-        tareaService.modificaTarea(idTarea, tareaData.getTitulo());
+        tareaService.modificaTarea(idTarea, tarea.getTitulo());
+        logger.debug("Tarea modificada correctamente");
         flash.addFlashAttribute("mensaje", "Tarea modificada correctamente");
-        return "redirect:/usuarios/" + tarea.getUsuarioId() + "/tareas";
+        return "redirect:/usuarios/" + tareaExistente.getUsuarioId() + "/tareas";
     }
 
     @DeleteMapping("/tareas/{id}")

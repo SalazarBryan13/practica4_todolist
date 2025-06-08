@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="fragments :: head (titulo='Login')"></head>
+
+<body style="background-color: #f8f9fa; min-height: 100vh;">
+
+<div class="container d-flex align-items-center justify-content-center" style="min-height: 90vh;">
+    <div class="row w-100">
+        <div class="col-md-6 offset-md-3">
+            <div class="card shadow-lg rounded-lg">
+                <div class="card-body p-5">
+                    <h2 class="text-center mb-4">Bienvenido a ToDoList</h2>
+                    <h4 class="text-center mb-4">Iniciar sesión</h4>
+                    <div class="alert alert-danger" th:if="${param.error}">
+                        <p>Error de autenticación. Por favor, verifica tus credenciales.</p>
+                    </div>
+                    <div class="alert alert-danger" th:if="${error}" th:text="${error}"></div>
+                    <div class="alert alert-success" th:if="${param.logout}">
+                        <p>Has salido de la aplicación correctamente.</p>
+                    </div>
+                    <form th:action="@{/login}" method="post">
+                        <div class="form-group mb-4">
+                            <label for="eMail">Email</label>
+                            <input type="email" class="form-control form-control-lg" id="eMail" name="eMail" required autofocus/>
+                        </div>
+                        <div class="form-group mb-4">
+                            <label for="password">Contraseña</label>
+                            <input type="password" class="form-control form-control-lg" id="password" name="password" required/>
+                        </div>
+                        <div class="d-grid gap-2 mb-3">
+                            <button type="submit" class="btn btn-primary btn-lg">Iniciar sesión</button>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <a class="btn btn-link" th:href="@{/registro}">Registrarse</a>
+                            <a class="btn btn-link" th:href="@{/about}">Acerca de</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div th:replace="fragments::javascript"/>
+
+</body>
+</html> 
