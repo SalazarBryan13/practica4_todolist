@@ -1,52 +1,116 @@
-# Documentación Técnica - Práctica 2
+# Documentación Técnica – Práctica 2
 
 ## Introducción
 
-Este documento describe la arquitectura, las funcionalidades implementadas y las decisiones técnicas tomadas en el desarrollo de la aplicación ToDoListSpringBoot, siguiendo la metodología XP y las indicaciones de la práctica 3. El desarrollo se ha gestionado mediante ramas feature, issues y pull requests en GitHub, asegurando trazabilidad y control de versiones.
+Durante la segunda práctica del proyecto ToDoList, se han implementado nuevas funcionalidades orientadas a la gestión de usuarios y la mejora de la experiencia de usuario. El desarrollo se ha gestionado mediante historias de usuario en Trello y issues en GitHub.
 
-## Estructura del Proyecto
+A continuación, se detallan los principales cambios y ampliaciones realizadas en la arquitectura, la lógica de negocio, la capa de presentación y la cobertura de pruebas.
 
-La aplicación está basada en Spring Boot y sigue una arquitectura MVC (Modelo-Vista-Controlador). El código fuente se organiza en los siguientes paquetes principales:
+---
 
-- `controller`: Controladores web que gestionan las rutas y la lógica de interacción con el usuario.
-- `service`: Lógica de negocio y servicios de la aplicación.
-- `model`: Entidades JPA que representan las tablas de la base de datos.
-- `repository`: Interfaces para el acceso a datos usando Spring Data JPA.
-- `dto`: Objetos de transferencia de datos para desacoplar la lógica de negocio de la presentación.
+## Funcionalidades implementadas
 
-La configuración de la base de datos y otros parámetros se realiza en `application.properties`.
+### 1. Página Acerca de
 
-## Funcionalidades Implementadas
+Se ha creado la página `/about`, accesible desde la barra de navegación y la pantalla de login. Esta página muestra información relevante sobre la aplicación, el desarrollador y la versión actual. El controlador `AcercaDeController` gestiona la lógica, añadiendo al modelo el usuario logeado (si existe) para personalizar la barra de navegación.
 
-### 1. Gestión de Usuarios y Tareas
+La vista `about.html` utiliza fragmentos Thymeleaf para la cabecera y la barra de navegación, mostrando los datos de versión y autor.
 
-La aplicación permite el registro y autenticación de usuarios. Cada usuario puede crear, editar y eliminar tareas personales. Las relaciones entre usuarios y tareas están gestionadas mediante JPA, con una relación uno-a-muchos (un usuario puede tener muchas tareas).
+### 2. Barra de menú (Navbar)
 
-### 2. Usuario Administrador
+Se ha implementado un fragmento Thymeleaf reutilizable (`fragments/navbar.html`) que muestra una barra de navegación superior en todas las páginas, excepto login y registro. La barra adapta su contenido según el estado de autenticación del usuario:
+- Si no está logeado, muestra enlaces a login y registro.
+- Si está logeado, muestra enlaces a tareas y un menú desplegable con el nombre del usuario y opciones de cuenta y cierre de sesión.
 
-Se ha implementado la funcionalidad de usuario administrador, cumpliendo los siguientes requisitos:
+### 3. Listado y descripción de usuarios
 
-- **Registro como administrador:** En la página de registro se muestra un checkbox para darse de alta como administrador, solo si no existe ya un administrador en el sistema.
-- **Restricción de único administrador:** Si ya existe un usuario administrador, el checkbox no aparece para nuevos registros.
-- **Acceso especial:** Al iniciar sesión, el usuario administrador es redirigido directamente a la lista de usuarios.
-- **Controladores y servicios:** Se han modificado los controladores y servicios para soportar la lógica de verificación y registro de administradores.
+El controlador `UsuarioController` gestiona dos endpoints protegidos para administradores:
+- `/registrados`: muestra una tabla con todos los usuarios registrados, su rol (usuario o administrador), estado (activo o bloqueado) y permite al administrador bloquear/desbloquear usuarios.
+- `/registrados/{id}`: muestra la información detallada de un usuario (nombre, email, fecha de nacimiento), excluyendo la contraseña.
 
-### 3. Manejo de ramas y control de versiones
+Ambas vistas (`listadoUsuarios.html` y `descripcionUsuario.html`) están diseñadas con Bootstrap y fragmentos Thymeleaf para mantener la coherencia visual.
 
-El desarrollo de la funcionalidad de administrador se realizó inicialmente en la rama `descripcion-usuario` por error, pero posteriormente se trasladó correctamente a la rama `administrador`, donde se realizó el commit y el push al repositorio remoto. Finalmente, la rama `administrador` fue fusionada con `main` para integrar los cambios en la rama principal.
+### 4. Usuario administrador y protección de páginas
 
-### 4. Pruebas y validación
+Se ha añadido la posibilidad de que el primer usuario registrado pueda marcarse como administrador. El modelo `Usuario` incluye los campos `admin` y `bloqueado`, y la lógica de negocio en `UsuarioService` asegura que solo un usuario pueda tener el rol de administrador. El acceso a las páginas de gestión de usuarios está protegido y solo es posible para administradores, lanzando un error HTTP 403 en caso contrario.
 
-Se han ejecutado los tests automáticos proporcionados por el proyecto para asegurar que las nuevas funcionalidades no rompen la lógica existente. Además, se han realizado pruebas manuales para verificar el flujo de registro y acceso del usuario administrador, así como la restricción de único administrador.
+### 5. Bloqueo y habilitación de usuarios
 
-## Decisiones Técnicas y Buenas Prácticas
+El administrador puede bloquear o habilitar usuarios desde el listado. Los usuarios bloqueados no pueden iniciar sesión; la lógica está implementada tanto en el servicio como en la integración con Spring Security. El estado se refleja visualmente en la tabla y mediante un botón de acción.
 
-- **Uso de DTOs:** Se emplean objetos DTO para transferir datos entre la capa de servicios y los controladores, evitando exponer directamente las entidades JPA y mejorando la seguridad y el desacoplamiento.
-- **Inyección de dependencias:** Se utiliza la inyección de dependencias de Spring para gestionar los servicios y repositorios, facilitando la escalabilidad y el mantenimiento del código.
-- **Transaccionalidad:** Los métodos de servicio que interactúan con la base de datos están anotados con `@Transactional` para asegurar la integridad de los datos y el correcto manejo de las relaciones lazy.
-- **Control de acceso:** Se ha implementado lógica para asegurar que solo un usuario pueda ser administrador y que este tenga acceso especial a la lista de usuarios.
-- **Control de versiones:** El uso de ramas feature y pull requests en GitHub ha permitido un desarrollo ordenado y colaborativo, siguiendo las mejores prácticas de integración continua.
+---
+
+## Plantillas Thymeleaf y fragmentos
+
+- `about.html`: Página Acerca de.
+- `listadoUsuarios.html`: Listado de usuarios con acciones de administración.
+- `descripcionUsuario.html`: Detalle de usuario.
+- `fragments/navbar.html`: Barra de navegación reutilizable.
+- Otros: formularios de login, registro, tareas, etc.
+
+---
+
+## Principales clases y métodos añadidos
+
+- **Controladores:**
+  - `AcercaDeController`: endpoint `/about`.
+  - `UsuarioController`: endpoints `/registrados`, `/registrados/{id}` y acción de bloqueo.
+- **Servicios:**
+  - `UsuarioService`: gestión de login, registro, búsqueda, validación de administrador, bloqueo y desbloqueo de usuarios.
+- **Modelos:**
+  - `Usuario`: atributos `admin` y `bloqueado`, métodos de acceso y lógica de igualdad.
+- **Repositorios:**
+  - `UsuarioRepository`: métodos para búsqueda por email y listado completo.
+- **DTOs:**
+  - `UsuarioData`, `TareaData`, `LoginData`, `RegistroData`: facilitan la transferencia de datos entre capas.
+
+---
+
+## Pruebas implementadas
+
+Se han añadido y ampliado tests automáticos :
+
+- **Web:**  
+  - `NavbarWebTest`: verifica la visualización dinámica de la barra de navegación según el estado de autenticación.
+  - `UsuarioWebTest`: cubre login, registro, acceso a páginas protegidas, y acciones de administración.
+- **Servicios:**  
+  - `UsuarioServiceTest`: pruebas de registro, login, validación de administrador, bloqueo y desbloqueo.
+- **Repositorios:**  
+  - `UsuarioTest`, `TareaTest`: validan la persistencia y relaciones de los modelos.
+
+**Ejemplo de test relevante:**
+```java
+@Test
+@WithMockUser(username = "admin@ua", roles = {"ADMIN"})
+public void getListadoUsuariosDevuelveUsuarios() throws Exception {
+    // Crear usuario admin de prueba
+    UsuarioData usuarioData = new UsuarioData();
+    usuarioData.setEmail("admin@ua");
+    usuarioData.setPassword("123");
+    usuarioData.setNombre("Admin Test");
+    usuarioData.setAdmin(true);
+    usuarioService.registrar(usuarioData);
+
+    // Simular usuario admin logueado
+    when(managerUserSession.usuarioLogeado()).thenReturn(usuarioData.getId());
+    when(managerUserSession.nombreUsuarioLogeado()).thenReturn(usuarioData.getNombre());
+
+    mockMvc.perform(get("/registrados"))
+            .andExpect(status().isOk())
+            .andExpect(content().string(containsString("Admin Test")));
+}
+```
+
+---
+
+## Explicación de código
+
+La arquitectura sigue el patrón MVC de Spring Boot, separando  la lógica de negocio (servicios), la persistencia (repositorios) y la presentación (controladores y vistas). Se ha hecho especial hincapié en la reutilización de fragmentos Thymeleaf y en la protección de rutas sensibles mediante validaciones en los controladores y servicios.
+
+El uso de DTOs y ModelMapper facilita la transferencia de datos entre capas y mejora la mantenibilidad del código. Además, la cobertura de tests automáticos aseguran una garantia de las nuevas funcionalidades.
+
+---
 
 ## Conclusión
 
-Hasta el momento, la aplicación cumple con los requisitos principales de la práctica, incluyendo la gestión de usuarios, tareas y la funcionalidad de usuario administrador. El flujo de trabajo basado en ramas y la integración continua han facilitado la trazabilidad y la calidad del desarrollo. Se recomienda continuar con la implementación de las siguientes funcionalidades obligatorias y opcionales, manteniendo la misma disciplina en el control de versiones y la documentación. 
+ Se han seguido buenas prácticas de desarrollo , integración continua y pruebas automatizadas, lo que facilita la evolución futura del sistema y la colaboración en equipo. La documentación y la organización en Trello y GitHub han servido de apoyo para mantener la trazabilidad y la claridad en el desarrollo. 

@@ -1,20 +1,35 @@
 # Aplicación inicial ToDoList
 
-Aplicación ToDoList de la asignatura  Metologias Agiles 2025-A EPN usando Spring Boot y plantillas Thymeleaf.
+Aplicación ToDoList de la asignatura Metodologías Ágiles 2025-A EPN usando Spring Boot y plantillas Thymeleaf.
 
-# Enlace a tablero Trello
+## Descripción funcional
+Esta aplicación permite a los usuarios:
+- Registrarse y autenticarse.
+- Gestionar tareas personales (crear, editar, eliminar, listar).
+- Visualizar una página "Acerca de" con información del equipo y la versión.
+- Los administradores pueden ver el listado de usuarios, ver detalles y bloquear/habilitar usuarios.
+
+## Estructura del proyecto
+- `src/main/java/madstodolist/controller`: Controladores web (MVC).
+- `src/main/java/madstodolist/service`: Lógica de negocio y servicios.
+- `src/main/java/madstodolist/model`: Entidades JPA.
+- `src/main/java/madstodolist/repository`: Repositorios de acceso a datos.
+- `src/main/resources/templates`: Vistas Thymeleaf.
+- `src/test/java/madstodolist`: Pruebas automáticas (controladores, servicios, repositorios).
+- `doc/`: Documentación técnica y de la práctica.
+
+## Enlace a tablero Trello
 https://trello.com/invite/b/683cd785831c50fb567856c0/ATTI2df8539ec62c0a21f78f18068105074c019CE665/todolist-epn
 
 ## Requisitos
 
 Necesitas tener instalado en tu sistema:
-
 - Java 8
+- Maven
 
 ## Ejecución
 
-Puedes ejecutar la aplicación usando el _goal_ `run` del _plugin_ Maven 
-de Spring Boot:
+Puedes ejecutar la aplicación usando el _goal_ `run` del _plugin_ Maven de Spring Boot:
 
 ```
 $ ./mvnw spring-boot:run 
@@ -28,6 +43,28 @@ $ java -jar target/mads-todolist-inicial-0.0.1-SNAPSHOT.jar
 ```
 
 Una vez lanzada la aplicación puedes abrir un navegador y probar la página de inicio:
-
 - [http://localhost:8080/login](http://localhost:8080/login)
-# TodoListSpringBoot
+
+## Credenciales de prueba
+- Usuario de ejemplo: `user@ua`
+- Contraseña: `123`
+- (Puedes crear nuevos usuarios desde la página de registro)
+
+## Cómo correr los tests
+Para ejecutar todos los tests automáticos:
+```
+$ ./mvnw test
+```
+
+## Cómo contribuir
+1. Haz un fork del repositorio.
+2. Crea una rama para tu feature o corrección: `git checkout -b mi-feature`.
+3. Realiza tus cambios y haz commit.
+4. Haz push a tu rama: `git push origin mi-feature`.
+5. Abre un Pull Request en GitHub.
+
+## Licencia
+Este proyecto es solo para fines educativos en la EPN. No se distribuye bajo una licencia específica.
+
+## Contacto
+Para dudas o soporte, contacta a: bryan.salazar@epn.edu.ec
