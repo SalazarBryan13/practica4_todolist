@@ -18,8 +18,13 @@ Esta aplicación permite a los usuarios:
 - `src/test/java/madstodolist`: Pruebas automáticas (controladores, servicios, repositorios).
 - `doc/`: Documentación técnica y de la práctica.
 
-## Enlace a tablero Trello
+## Enlace a tablero Trello (público)
+El tablero Trello es público para su revisión:
 https://trello.com/invite/b/683cd785831c50fb567856c0/ATTI2df8539ec62c0a21f78f18068105074c019CE665/todolist-epn
+
+## Imagen Docker
+La imagen está disponible en Docker Hub:
+https://hub.docker.com/r/bryanhert/mads-todolist
 
 ## Requisitos
 
@@ -39,11 +44,17 @@ También puedes generar un `jar` y ejecutarlo:
 
 ```
 $ ./mvnw package
-$ java -jar target/mads-todolist-inicial-0.0.1-SNAPSHOT.jar 
+$ java -jar target/epn-todolist-Bryan_Salazar-1.0.1-SNAPSHOT.jar
 ```
 
 Una vez lanzada la aplicación puedes abrir un navegador y probar la página de inicio:
 - [http://localhost:8080/login](http://localhost:8080/login)
+
+## Ejecución con Docker
+También puedes ejecutar la aplicación directamente con Docker:
+```
+docker run --rm -p 8080:8080 bryanhert/mads-todolist:1.0.1
+```
 
 ## Credenciales de prueba
 - Usuario de ejemplo: `user@ua`
@@ -55,6 +66,10 @@ Para ejecutar todos los tests automáticos:
 ```
 $ ./mvnw test
 ```
+
+## Repositorio GitHub
+Repositorio oficial del proyecto:
+https://github.com/SalazarBryan13/TodoListSpringBoot
 
 ## Cómo contribuir
 1. Haz un fork del repositorio.
@@ -68,3 +83,4 @@ Este proyecto es solo para fines educativos en la EPN. No se distribuye bajo una
 
 ## Contacto
 Para dudas o soporte, contacta a: bryan.salazar@epn.edu.ec
+
