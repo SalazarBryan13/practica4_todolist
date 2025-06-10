@@ -18,6 +18,8 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import javax.servlet.http.HttpSession;
 import java.util.List;
 
+// Controlador encargado de gestionar las tareas de los usuarios.
+// Incluye endpoints para crear, listar, editar y borrar tareas.
 @Controller
 public class TareaController {
 
@@ -32,12 +34,19 @@ public class TareaController {
     @Autowired
     ManagerUserSession managerUserSession;
 
+    /**
+     * Verifica que el usuario logeado coincide con el usuario de la URL.
+     * Lanza una excepción si no coincide.
+     */
     private void comprobarUsuarioLogeado(Long idUsuario) {
         Long idUsuarioLogeado = managerUserSession.usuarioLogeado();
         if (!idUsuario.equals(idUsuarioLogeado))
             throw new UsuarioNoLogeadoException();
     }
 
+    /**
+     * Muestra el formulario para crear una nueva tarea para un usuario.
+     */
     @GetMapping("/usuarios/{id}/tareas/nueva")
     public String formNuevaTarea(@PathVariable(value="id") Long idUsuario,
                                  @ModelAttribute TareaData tareaData, Model model,
@@ -50,6 +59,9 @@ public class TareaController {
         return "formNuevaTarea";
     }
 
+    /**
+     * Procesa la creación de una nueva tarea para un usuario.
+     */
     @PostMapping("/usuarios/{id}/tareas/nueva")
     public String nuevaTarea(@PathVariable(value="id") Long idUsuario, @ModelAttribute TareaData tareaData,
                              Model model, RedirectAttributes flash,
@@ -62,6 +74,9 @@ public class TareaController {
         return "redirect:/usuarios/" + idUsuario + "/tareas";
      }
 
+    /**
+     * Muestra el listado de tareas de un usuario.
+     */
     @GetMapping("/usuarios/{id}/tareas")
     public String listadoTareas(@PathVariable(value="id") Long idUsuario, Model model, HttpSession session) {
 
@@ -74,6 +89,9 @@ public class TareaController {
         return "listaTareas";
     }
 
+    /**
+     * Muestra el formulario para editar una tarea existente.
+     */
     @GetMapping("/tareas/{id}/editar")
     public String formEditaTarea(@PathVariable(value="id") Long idTarea, Model model, HttpSession session) {
         logger.debug("Entrando a formEditaTarea con idTarea: {}", idTarea);
@@ -95,6 +113,9 @@ public class TareaController {
         return "formEditarTarea";
     }
 
+    /**
+     * Procesa la edición de una tarea existente.
+     */
     @PostMapping("/tareas/{id}/editar")
     public String grabaTareaModificada(@PathVariable(value="id") Long idTarea, @ModelAttribute TareaData tarea,
                                        Model model, RedirectAttributes flash, HttpSession session) {
@@ -114,6 +135,9 @@ public class TareaController {
         return "redirect:/usuarios/" + tareaExistente.getUsuarioId() + "/tareas";
     }
 
+    /**
+     * Borra una tarea existente. Devuelve una respuesta vacía si tiene éxito.
+     */
     @DeleteMapping("/tareas/{id}")
     @ResponseBody
     // La anotación @ResponseBody sirve para que la cadena devuelta sea la resupuesta
