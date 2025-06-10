@@ -1,108 +1,213 @@
 # Documentación Técnica – Práctica 2
 
-Nombre : Bryan Salazar
+Nombre: Bryan Salazar
 
 ## Introducción
 
 Durante la segunda práctica del proyecto ToDoList, se han implementado nuevas funcionalidades orientadas a la gestión de usuarios y la mejora de la experiencia de usuario. El desarrollo se ha gestionado mediante historias de usuario en Trello y issues en GitHub.
 
-A continuación, se detallan los principales cambios y ampliaciones realizadas en la arquitectura, la lógica de negocio, la capa de presentación y la cobertura de pruebas.
-
----
+A continuación, se detallan los principales cambios  realizados en la arquitectura, la lógica de negocio, la capa de presentación y la cobertura de pruebas.
 
 ## Funcionalidades implementadas
 
-### 1. Página Acerca de
+### Página Acerca de
+Se implementó una página accesible desde la barra de navegación y la pantalla de login, que muestra información sobre la aplicación, su desarrollador y la versión actual. 
 
-Se ha creado la página `/about`, accesible desde la barra de navegación y la pantalla de login. Esta página muestra información relevante sobre la aplicación, el desarrollador y la versión actual. El controlador `AcercaDeController` gestiona la lógica, añadiendo al modelo el usuario logeado (si existe) para personalizar la barra de navegación.
+### Barra de navegación
+La barra de navegación está diseñada para aparecer en todas las páginas, excepto en las de login y registro. Su contenido varía según el estado del usuario: si no está autenticado, muestra opciones para iniciar sesión o registrarse; si está autenticado, incluye enlaces a las tareas y un menú con el nombre del usuario, opciones de cuenta y cierre de sesión.
 
-La vista `about.html` utiliza fragmentos Thymeleaf para la cabecera y la barra de navegación, mostrando los datos de versión y autor.
+### Listado y detalle de usuarios
+Se desarrolló una funcionalidad exclusiva para administradores que permite visualizar una tabla con todos los usuarios, indicando su rol (usuario o administrador) y estado (activo o bloqueado), con la opción de bloquear o desbloquear cuentas. También se puede acceder a una vista detallada de cada usuario, mostrando nombre, email y fecha de nacimiento, sin incluir datos sensibles.
 
-### 2. Barra de menú (Navbar)
+### Usuario administrador y protección
+Se habilitó la opción de designar al primer usuario registrado como administrador. Solo este rol puede acceder a las funciones de gestión de usuarios, con restricciones que generan un error de acceso denegado para otros usuarios.
 
-Se ha implementado un fragmento Thymeleaf reutilizable (`fragments/navbar.html`) que muestra una barra de navegación superior en todas las páginas, excepto login y registro. La barra adapta su contenido según el estado de autenticación del usuario:
-- Si no está logeado, muestra enlaces a login y registro.
-- Si está logeado, muestra enlaces a tareas y un menú desplegable con el nombre del usuario y opciones de cuenta y cierre de sesión.
+### Bloqueo y habilitación de usuarios
+Se implementó un sistema para que los administradores puedan bloquear o habilitar usuarios desde la tabla. Los usuarios bloqueados no pueden iniciar sesión, y este estado se refleja visualmente con un botón que permite modificarlo.
 
-### 3. Listado y descripción de usuarios
+## Nuevas Clases y Métodos Implementados
 
-El controlador `UsuarioController` gestiona dos endpoints protegidos para administradores:
-- `/registrados`: muestra una tabla con todos los usuarios registrados, su rol (usuario o administrador), estado (activo o bloqueado) y permite al administrador bloquear/desbloquear usuarios.
-- `/registrados/{id}`: muestra la información detallada de un usuario (nombre, email, fecha de nacimiento), excluyendo la contraseña.
+### Controladores
+Los controladores manejan las peticiones web y conectan la interfaz de usuario con la lógica de negocio:
 
-Ambas vistas (`listadoUsuarios.html` y `descripcionUsuario.html`) están diseñadas con Bootstrap y fragmentos Thymeleaf para mantener la coherencia visual.
+- `AcercaDeController`: 
+  - `@GetMapping("/about")`: Renderiza la página Acerca de
+  - Este controlador añade información del usuario actual a cualquier página mediante `@ModelAttribute`, permitiendo mostrar el nombre del usuario en la barra de navegación.
 
-### 4. Usuario administrador y protección de páginas
+- `UsuarioController`: 
+  - `@GetMapping("/registrados")`: Listado de usuarios (admin)
+  - `@GetMapping("/registrados/{id}")`: Detalle de usuario
+  - `@PostMapping("/registrados/{id}/bloquear")`: Bloqueo/desbloqueo
+  - Este controlador gestiona el acceso a las funcionalidades de administración. Implementa protección de rutas mediante Spring Security, devolviendo un error 403 (Forbidden) para usuarios no autorizados.
 
-Se ha añadido la posibilidad de que el primer usuario registrado pueda marcarse como administrador. El modelo `Usuario` incluye los campos `admin` y `bloqueado`, y la lógica de negocio en `UsuarioService` asegura que solo un usuario pueda tener el rol de administrador. El acceso a las páginas de gestión de usuarios está protegido y solo es posible para administradores, lanzando un error HTTP 403 en caso contrario.
+- `LoginController`:
+  - `@PostMapping("/login")`: Autenticación
+  - `@PostMapping("/registro")`: Registro de usuarios
+  - Gestiona la autenticación y registro de usuarios, validando credenciales y manejando el proceso de inicio de sesión.
 
-### 5. Bloqueo y habilitación de usuarios
+### Servicios
+Los servicios implementan la lógica de negocio principal de la aplicación:
 
-El administrador puede bloquear o habilitar usuarios desde el listado. Los usuarios bloqueados no pueden iniciar sesión; la lógica está implementada tanto en el servicio como en la integración con Spring Security. El estado se refleja visualmente en la tabla y mediante un botón de acción.
+- `UsuarioService`:
+  - `registrar(UsuarioData)`: Registro con validación
+    - Valida la disponibilidad del email y encripta la contraseña antes de almacenar los datos del usuario.
+  - `findByEmail(String)`: Búsqueda por email
+    - Realiza búsquedas eficientes de usuarios mediante el email, que está indexado en la base de datos.
+  - `findAllUsuarios()`: Listado completo
+    - Proporciona acceso a la lista completa de usuarios para el panel de administración.
+  - `bloquearUsuario(Long)`: Gestión de bloqueo
+    - Implementa la funcionalidad de bloqueo y desbloqueo de usuarios mediante transacciones seguras.
 
----
+### Modelos y DTOs
+Los modelos representan los datos en la base de datos, mientras que los DTOs facilitan la transferencia de datos entre capas:
 
-## Plantillas Thymeleaf y fragmentos
+- `Usuario`: 
+  ```java
+  @Entity
+  public class Usuario {
+      private String email;
+      private String password;
+      private String nombre;
+      private boolean admin;
+      private boolean bloqueado;
+      // Getters y setters
+  }
+  ```
+  Esta clase define la estructura de datos del usuario en la base de datos:
+  - `email`: Identificador único del usuario
+  - `password`: Contraseña encriptada
+  - `nombre`: Nombre mostrado en la interfaz
+  - `admin`: Indica si es administrador
+  - `bloqueado`: Indica si el usuario está bloqueado
 
-- `about.html`: Página Acerca de.
-- `listadoUsuarios.html`: Listado de usuarios con acciones de administración.
-- `descripcionUsuario.html`: Detalle de usuario.
+- DTOs:
+  - `UsuarioData`: Datos de usuario (sin password)
+    - Contiene los datos del usuario para mostrar en la interfaz, excluyendo información sensible.
+  - `LoginData`: Credenciales
+    - Almacena las credenciales necesarias para el proceso de autenticación.
+  - `RegistroData`: Datos de registro
+    - Contiene los datos necesarios para el registro de nuevos usuarios.
+
+## Plantillas Thymeleaf Añadidas
+
+### Páginas Principales
+Las plantillas implementan la interfaz de usuario con Thymeleaf:
+
+- `about.html`: Página Acerca de
+  - Muestra información sobre la aplicación.
+- `listadoUsuarios.html`: Tabla de usuarios 
+  - Presenta una tabla interactiva con la lista de usuarios y controles de administración.
+- `descripcionUsuario.html`: Detalle de usuario
+  - Muestra la información detallada de un usuario .
+
 - `fragments/navbar.html`: Barra de navegación reutilizable.
-- Otros: formularios de login, registro, tareas, etc.
 
----
+### Fragmentos
+Los fragmentos son componentes HTML reutilizables:
 
-## Principales clases y métodos añadidos
+- `fragments/navbar.html`: Barra de navegación reutilizable
+  ```html
+  <nav th:fragment="navbar" class="navbar navbar-expand-lg navbar-dark bg-dark">
+      <!-- Contenido dinámico según autenticación -->
+      <div th:if="${idUsuarioLogeado != null}">
+          <!-- Menú usuario autenticado -->
+      </div>
+      <div th:if="${idUsuarioLogeado == null}">
+          <!-- Menú usuario no autenticado -->
+      </div>
+  </nav>
+  ```
+  La barra de navegación se adapta dinámicamente según el estado de autenticación:
+  - Muestra el nombre y opciones del usuario cuando está autenticado
+  - Presenta opciones de login y registro para usuarios no autenticados
+  - Implementa un diseño responsive con Bootstrap
 
-- **Controladores:**
-  - `AcercaDeController`: endpoint `/about`.
-  - `UsuarioController`: endpoints `/registrados`, `/registrados/{id}` y acción de bloqueo.
-- **Servicios:**
-  - `UsuarioService`: gestión de login, registro, búsqueda, validación de administrador, bloqueo y desbloqueo de usuarios.
-- **Modelos:**
-  - `Usuario`: atributos `admin` y `bloqueado`, métodos de acceso y lógica de igualdad.
-- **Repositorios:**
-  - `UsuarioRepository`: métodos para búsqueda por email y listado completo.
-- **DTOs:**
-  - `UsuarioData`, `TareaData`, `LoginData`, `RegistroData`: facilitan la transferencia de datos entre capas.
+## Tests Implementados
 
----
+### Tests Web
+Los tests web verifican el funcionamiento de la interfaz:
 
-## Pruebas implementadas
+- `NavbarWebTest`: 
+  ```java
+  @Test
+  @WithMockUser(username = "test@ua", roles = {"USER"})
+  public void navbarMuestraNombreUsuarioCuandoEstaLogeado() {
+      // Verifica visualización del nombre de usuario
+  }
+  ```
+  Verifica la correcta visualización del nombre de usuario en la barra de navegación.
 
-Se han añadido y ampliado tests automáticos :
+- `UsuarioWebTest`: 
+  - Login/registro
+  - Acceso a páginas protegidas
+  - Acciones de administrador
+  Asegura el correcto funcionamiento de:
+  - Proceso de registro y autenticación
+  - Protección de rutas administrativas
+  - Funcionalidades de administración
 
-- **Web:**  
-  - `NavbarWebTest`: verifica la visualización dinámica de la barra de navegación según el estado de autenticación.
-  - `UsuarioWebTest`: cubre login, registro, acceso a páginas protegidas, y acciones de administración.
-- **Servicios:**  
-  - `UsuarioServiceTest`: pruebas de registro, login, validación de administrador, bloqueo y desbloqueo.
-- **Repositorios:**  
-  - `UsuarioTest`, `TareaTest`: validan la persistencia y relaciones de los modelos.
+### Tests de Servicio
+Los tests de servicio validan la lógica de negocio:
 
+- `UsuarioServiceTest`:
+  - Registro de usuarios
+  - Validación de administrador
+  - Bloqueo/desbloqueo
+  Verifica:
+  - El correcto registro de usuarios
+  - La restricción a un único administrador
+  - El funcionamiento del sistema de bloqueo
 
----
+## Código Relevante
+
+Implementación del bloqueo de usuarios en `UsuarioService`:
+```java
+@Override
+@Transactional(readOnly = true)
+public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
+    Optional<Usuario> usuario = usuarioRepository.findByEmail(email);
+    if (!usuario.isPresent()) {
+        throw new UsernameNotFoundException("Usuario no encontrado");
+    }
+    if (usuario.get().isBloqueado()) {
+        throw new UsernameNotFoundException("Usuario bloqueado");
+    }
+    return new User(
+        usuario.get().getEmail(),
+        usuario.get().getPassword(),
+        Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER"))
+    );
+}
+```
+
+Características del código:
+1. Implementa la integración con Spring Security
+   - Este método proporciona la autenticación personalizada para Spring Security, verificando las credenciales del usuario.
+2. Maneja el bloqueo de usuarios a nivel de autenticación
+   - Implementa la lógica de bloqueo durante el proceso de autenticación, denegando el acceso a usuarios bloqueados.
+3. Utiliza transacciones para operaciones de lectura
+   - La anotación `@Transactional(readOnly = true)` optimiza el rendimiento de las operaciones de lectura.
+4. Sigue el patrón de diseño Repository
+   - Utiliza el repositorio para acceder a la base de datos de manera encapsulada .
+
 ## Metodología y Herramientas
 
-Durante el desarrollo, utilicé Git y GitHub para el control de versiones. Cada nueva funcionalidad se desarrolló en una rama diferente, y luego se integró a la rama principal mediante pull requests. Los issues y el tablero de proyecto en GitHub me ayudaron a organizar y priorizar las tareas. Además, creé un tablero público en Trello para documentar las historias de usuario y su estado.
-Para asegurar la calidad del código, implementé pruebas automáticas usando JUnit y las herramientas de testing de Spring Boot. Estas pruebas cubren tanto la lógica de negocio como los controladores web. Antes de cada entrega, ejecuté todos los tests para asegurarme de que la aplicación funcionaba correctamente.
-
-## Despliegue y Docker
-
-Una vez finalizado el desarrollo, empaqueté la aplicación en un archivo JAR usando Maven. Luego, creé una imagen Docker y la subí a Docker Hub, lo que facilita el despliegue en cualquier entorno. 
-
-## Explicación de código
-
-La arquitectura sigue el patrón MVC de Spring Boot, separando  la lógica de negocio (servicios), la persistencia (repositorios) y la presentación (controladores y vistas). Se ha hecho especial hincapié en la reutilización de fragmentos Thymeleaf y en la protección de rutas sensibles mediante validaciones en los controladores y servicios.
-
-El uso de DTOs y ModelMapper facilita la transferencia de datos entre capas y mejora la mantenibilidad del código. Además, la cobertura de tests automáticos aseguran una garantia de las nuevas funcionalidades.
-
----
+- Control de versiones: Git/GitHub
+  - Facilita el control de cambios y la colaboración en el desarrollo.
+- Gestión de tareas: Trello
+  - Organiza y prioriza las tareas del proyecto de manera visual.
+- Tests: JUnit + Spring Boot Test
+  - Proporciona herramientas para la verificación automatizada del código.
+- Despliegue: Docker
+  - Una vez finalizado el desarrollo, empaqueté la aplicación en un archivo JAR usando Maven. Luego, creé una imagen Docker y la subí a Docker Hub, lo que facilita el despliegue en cualquier entorno.
 
 ## Conclusión
 
- Se han seguido buenas prácticas de desarrollo , integración continua y pruebas automatizadas, lo que facilita la evolución futura del sistema y la colaboración en equipo, ademas de asegurarme de que cada nueva funcionalidad no afectara lo anterior. Esto facilitó mucho el mantenimiento del proyecto y me dio un apoyo para seguir construyendo sobre él en el futuro. También me ayudó a organizar mejor mi trabajo usando herramientas como Trello y GitHub, que me permitieron tener un seguimiento claro de lo que iba haciendo y de lo que faltaba por completar.
+Se han seguido buenas prácticas de desarrollo , integración continua y pruebas automatizadas, lo que facilita la evolución futura del sistema y la colaboración en equipo, ademas de asegurarme de que cada nueva funcionalidad no afectara lo anterior. Esto facilitó mucho el mantenimiento del proyecto y me dio un apoyo para seguir construyendo sobre él en el futuro. También me ayudó a organizar mejor mi trabajo usando herramientas como Trello y GitHub, que me permitieron tener un seguimiento claro de lo que iba haciendo y de lo que faltaba por completar.
 
+---
+
+ 
 ---
 
  
