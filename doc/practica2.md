@@ -101,7 +101,7 @@ El uso de DTOs y ModelMapper facilita la transferencia de datos entre capas y me
 
 ## Conclusión
 
- Se han seguido buenas prácticas de desarrollo , integración continua y pruebas automatizadas, lo que facilita la evolución futura del sistema y la colaboración en equipo. La documentación y la organización en Trello y GitHub han servido de apoyo para mantener la trazabilidad y la claridad en el desarrollo.
+ Se han seguido buenas prácticas de desarrollo , integración continua y pruebas automatizadas, lo que facilita la evolución futura del sistema y la colaboración en equipo, ademas de asegurarme de que cada nueva funcionalidad no afectara lo anterior. Esto facilitó mucho el mantenimiento del proyecto y me dio un apoyo para seguir construyendo sobre él en el futuro. También me ayudó a organizar mejor mi trabajo usando herramientas como Trello y GitHub, que me permitieron tener un seguimiento claro de lo que iba haciendo y de lo que faltaba por completar.
 
 ---
 
