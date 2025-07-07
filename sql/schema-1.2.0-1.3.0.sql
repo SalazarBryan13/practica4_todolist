@@ -1,8 +1,11 @@
 -- Script de migración de la versión 1.2.0 a la 1.3.0
--- En este caso no hay cambios en el esquema, pero este es el formato para futuras migraciones
+-- Este script actualiza la base de datos de producción de la versión 1.2.0 a la 1.3.0
 
--- Ejemplo de migración (comentado porque no hay cambios en esta versión):
--- ALTER TABLE public.usuarios ADD COLUMN nuevo_campo character varying(255);
+-- Añadir campo fecha_registro a la tabla usuarios
+ALTER TABLE public.usuarios ADD COLUMN fecha_registro timestamp DEFAULT CURRENT_TIMESTAMP;
 
--- Comentario: No hay cambios en el esquema de datos entre las versiones 1.2.0 y 1.3.0
--- Este script se mantiene como plantilla para futuras migraciones 
+-- Crear índice para mejorar el rendimiento de búsquedas por email
+CREATE INDEX idx_usuarios_email ON public.usuarios(email);
+
+-- Comentario: Esta migración añade un campo de auditoría a la tabla usuarios
+-- El campo se añade con valor por defecto para mantener la compatibilidad 
