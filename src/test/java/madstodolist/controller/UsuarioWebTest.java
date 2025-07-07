@@ -97,6 +97,14 @@ public class UsuarioWebTest {
     @Test
     @WithMockUser(username = "admin@ua", roles = {"ADMIN"})
     public void getListadoUsuariosDevuelveUsuarios() throws Exception {
+        // Eliminar usuario admin previo si existe
+        UsuarioData usuarioExistente = usuarioService.findByEmail("admin@ua");
+        if (usuarioExistente != null) {
+            // Si tienes un método para eliminar usuarios, úsalo aquí
+            // usuarioService.eliminar(usuarioExistente.getId());
+            // Si no, puedes dejarlo así, ya que el @Sql(clean-db.sql) debería limpiar la base
+        }
+
         // Crear usuario admin de prueba
         UsuarioData usuarioData = new UsuarioData();
         usuarioData.setEmail("admin@ua");
@@ -105,9 +113,12 @@ public class UsuarioWebTest {
         usuarioData.setAdmin(true);
         usuarioService.registrar(usuarioData);
 
+        // Recuperar el usuario admin guardado
+        UsuarioData usuarioAdmin = usuarioService.findByEmail("admin@ua");
+
         // Simular usuario admin logueado
-        when(managerUserSession.usuarioLogeado()).thenReturn(usuarioData.getId());
-        when(managerUserSession.nombreUsuarioLogeado()).thenReturn(usuarioData.getNombre());
+        when(managerUserSession.usuarioLogeado()).thenReturn(usuarioAdmin.getId());
+        when(managerUserSession.nombreUsuarioLogeado()).thenReturn(usuarioAdmin.getNombre());
 
         mockMvc.perform(get("/registrados"))
                 .andExpect(status().isOk())
