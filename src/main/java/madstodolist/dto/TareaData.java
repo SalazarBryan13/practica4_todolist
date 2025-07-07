@@ -1,5 +1,6 @@
 package madstodolist.dto;
 
+import madstodolist.model.PrioridadTarea;
 import java.io.Serializable;
 import java.util.Objects;
 
@@ -10,6 +11,7 @@ public class TareaData implements Serializable {
 
     private Long id;
     private String titulo;
+    private PrioridadTarea prioridad;
     private Long usuarioId;  // Esta es la ID del usuario asociado
 
     // Getters y setters
@@ -28,6 +30,14 @@ public class TareaData implements Serializable {
 
     public void setTitulo(String titulo) {
         this.titulo = titulo;
+    }
+
+    public PrioridadTarea getPrioridad() {
+        return prioridad;
+    }
+
+    public void setPrioridad(PrioridadTarea prioridad) {
+        this.prioridad = prioridad;
     }
 
     public Long getUsuarioId() {

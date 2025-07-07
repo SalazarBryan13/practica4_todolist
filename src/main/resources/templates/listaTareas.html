@@ -20,6 +20,7 @@
                         <tr>
                             <th>Id</th>
                             <th>Tarea</th>
+                            <th>Prioridad</th>
                             <th>Acción</th>
                         </tr>
                         </thead>
@@ -27,6 +28,14 @@
                         <tr th:each="tarea: ${tareas}">
                             <td th:text="${tarea.id}"></td>
                             <td th:text="${tarea.titulo}"></td>
+                            <td>
+                                <span th:switch="${tarea.prioridad}">
+                                    <span th:case="'ALTA'" class="badge badge-danger" th:text="${tarea.prioridad.descripcion}"></span>
+                                    <span th:case="'MEDIA'" class="badge badge-warning" th:text="${tarea.prioridad.descripcion}"></span>
+                                    <span th:case="'BAJA'" class="badge badge-success" th:text="${tarea.prioridad.descripcion}"></span>
+                                    <span th:case="*" class="badge badge-secondary" th:text="${tarea.prioridad != null ? tarea.prioridad.descripcion : 'Sin prioridad'}"></span>
+                                </span>
+                            </td>
                             <td>
                                 <a class="btn btn-primary btn-sm" th:href="@{/tareas/{id}/editar(id=${tarea.id})}">editar</a>
                                 <button class="btn btn-danger btn-sm" style="cursor: pointer;"
