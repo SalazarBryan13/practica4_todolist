@@ -1,172 +1,263 @@
 # Práctica 4: Trabajo en equipo con GitFlow y despliegue en producción
 
-## Equipo XX - Metodologías Ágiles 2025-A EPN
+## Equipo XX - ToDoList Spring Boot
 
 ### Miembros del equipo:
 - Bryan David Salazar Morocho
 - [Nombre del segundo miembro]
 - [Nombre del tercer miembro]
 
-## Documentación técnica de los cambios introducidos
+---
 
-### 1. Configuración de Docker mejorada
+## 1. Documentación técnica de los cambios introducidos
 
-Se ha modificado el `Dockerfile` para permitir el paso de parámetros de configuración:
+### 1.1 Configuración Docker mejorada
+
+Se ha actualizado el `Dockerfile` para permitir el paso de parámetros de configuración:
 
 ```dockerfile
 FROM openjdk:8-jdk-alpine
 COPY target/*.jar app.jar
+
 ENTRYPOINT ["sh","-c","java -Djava.security.egd=file:/dev/urandom -jar /app.jar ${0} ${@}"]
 ```
 
-Esto permite ejecutar el contenedor con parámetros adicionales:
+Esta configuración permite ejecutar el contenedor con parámetros adicionales:
 ```bash
-docker run --rm <usuario>/mads-todolist-equipoXX --spring.profiles.active=postgres --POSTGRES_HOST=host-prueba
+docker run --rm usuario/mads-todolist:1.3.0 --spring.profiles.active=postgres --POSTGRES_HOST=host-prueba
 ```
 
-### 2. Perfiles de configuración PostgreSQL
+### 1.2 Configuración de PostgreSQL con variables de entorno
 
-#### Perfil de desarrollo (application-postgres.properties):
-- Configuración para desarrollo con PostgreSQL
-- `spring.jpa.hibernate.ddl-auto=update` para actualización automática del esquema
-- Variables de entorno configurables para host, puerto, usuario y contraseña
+El archivo `application-postgres.properties` utiliza variables de entorno para la configuración:
 
-#### Perfil de producción (application-postgres-prod.properties):
-- Configuración para producción con PostgreSQL
-- `spring.jpa.hibernate.ddl-auto=validate` para validación del esquema sin modificaciones
-- Mismas variables de entorno configurables
+```properties
+POSTGRES_HOST=localhost
+POSTGRES_PORT=5432
+DB_USER=mads
+DB_PASSWD=mads
 
-### 3. Dependencias añadidas
-
-Se ha añadido la dependencia de PostgreSQL al `pom.xml`:
-```xml
-<dependency>
-    <groupId>org.postgresql</groupId>
-    <artifactId>postgresql</artifactId>
-    <scope>runtime</scope>
-</dependency>
+spring.datasource.url=jdbc:postgresql://${POSTGRES_HOST}:${POSTGRES_PORT}/mads
+spring.datasource.username=${DB_USER}
+spring.datasource.password=${DB_PASSWD}
+spring.jpa.properties.hibernate.dialect = org.hibernate.dialect.PostgreSQL9Dialect
+spring.jpa.hibernate.ddl-auto=update
+spring.sql.init.mode=never
 ```
 
-### 4. Actualización de versiones
+### 1.3 Perfil de producción
 
-- **Versión del proyecto**: 1.3.0-SNAPSHOT
-- **Nombre del proyecto**: todolist-equipo-XX
-- **Página "Acerca de"**: Actualizada con información del equipo
+Se ha creado el archivo `application-postgres-prod.properties` con configuración específica para producción:
 
-## Detalles del despliegue de producción
+```properties
+# Misma configuración que postgres pero con:
+spring.jpa.hibernate.ddl-auto=validate
+```
 
-### Configuración de red Docker
+El modo `validate` asegura que la aplicación no modifique automáticamente el esquema de la base de datos en producción.
 
+---
+
+## 2. Detalles del despliegue de producción
+
+### 2.1 Arquitectura de despliegue
+
+La aplicación se despliega usando dos contenedores Docker conectados por una red:
+
+1. **Contenedor de base de datos**: PostgreSQL 13
+2. **Contenedor de aplicación**: Spring Boot con perfil postgres-prod
+
+### 2.2 Comandos de despliegue
+
+#### Crear red de Docker:
 ```bash
-# Crear red para conectar aplicación y base de datos
 docker network create network-equipo
-
-# Lanzar contenedor PostgreSQL
-docker run -d --network network-equipo --network-alias postgres \
-  -v ${PWD}:/mi-host --name db-equipo \
-  -e POSTGRES_USER=mads -e POSTGRES_PASSWORD=mads -e POSTGRES_DB=mads \
-  postgres:13
-
-# Lanzar aplicación conectada a la base de datos
-docker run --rm --network network-equipo -p8080:8080 \
-  <usuario>/mads-todolist-equipoXX:1.3.0-snapshot \
-  --spring.profiles.active=postgres-prod --POSTGRES_HOST=postgres
 ```
 
-### Gestión de base de datos de producción
-
-#### Copias de seguridad
+#### Lanzar base de datos:
 ```bash
-# Crear copia de seguridad
+docker run -d \
+  --network network-equipo \
+  --network-alias postgres \
+  -v ${PWD}:/mi-host \
+  --name db-equipo \
+  -e POSTGRES_USER=mads \
+  -e POSTGRES_PASSWORD=mads \
+  -e POSTGRES_DB=mads \
+  postgres:13
+```
+
+#### Lanzar aplicación:
+```bash
+docker run --rm \
+  --network network-equipo \
+  -p 8080:8080 \
+  bryanhert/mads-todolist:1.3.0 \
+  --spring.profiles.active=postgres-prod \
+  --POSTGRES_HOST=postgres
+```
+
+### 2.3 Scripts de automatización
+
+Se han creado scripts para automatizar el despliegue:
+- `deploy-production.sh` (Linux/Mac)
+- `deploy-production.ps1` (Windows PowerShell)
+
+---
+
+## 3. Esquemas de datos
+
+### 3.1 Esquema versión 1.2.0
+
+Archivo: `sql/schema-1.2.0.sql`
+
+```sql
+CREATE TABLE public.usuarios (
+    id bigint NOT NULL,
+    email character varying(255) NOT NULL,
+    nombre character varying(255),
+    password character varying(255),
+    bloqueado boolean DEFAULT false,
+    PRIMARY KEY (id)
+);
+
+CREATE TABLE public.tareas (
+    id bigint NOT NULL,
+    titulo character varying(255),
+    descripcion text,
+    fecha_limite timestamp,
+    completada boolean DEFAULT false,
+    usuario_id bigint,
+    PRIMARY KEY (id),
+    FOREIGN KEY (usuario_id) REFERENCES public.usuarios(id)
+);
+```
+
+### 3.2 Esquema versión 1.3.0
+
+Archivo: `sql/schema-1.3.0.sql`
+
+El esquema de la versión 1.3.0 es idéntico al de la 1.2.0, ya que no se han introducido cambios en el modelo de datos.
+
+### 3.3 Script de migración
+
+Archivo: `sql/schema-1.2.0-1.3.0.sql`
+
+```sql
+-- Script de migración de la versión 1.2.0 a la 1.3.0
+-- No hay cambios en el esquema de datos entre estas versiones
+-- Este script se mantiene como plantilla para futuras migraciones
+```
+
+---
+
+## 4. Gestión de copias de seguridad
+
+### 4.1 Crear copia de seguridad
+
+```bash
 docker exec -it db-equipo bash
 pg_dump -U mads --clean mads > /mi-host/backup-$(date +%Y%m%d).sql
+exit
+```
 
-# Restaurar copia de seguridad
+### 4.2 Restaurar copia de seguridad
+
+```bash
 docker exec -it db-equipo bash
 psql -U mads mads < /mi-host/backup-YYYYMMDD.sql
+exit
 ```
 
-#### Migraciones de base de datos
+### 4.3 Copias de seguridad disponibles
+
+- `sql/backup-20250704.sql` - Copia de seguridad del 4 de julio de 2025
+
+---
+
+## 5. Implementación de GitFlow
+
+### 5.1 Estructura de ramas
+
+- **main**: Rama principal para releases
+- **develop**: Rama de desarrollo
+- **release-1.3.0**: Rama de release para la versión 1.3.0
+- **feature/***: Ramas de características
+
+### 5.2 Flujo de trabajo
+
+1. **Desarrollo**: Las nuevas características se desarrollan en ramas `feature/*` desde `develop`
+2. **Release**: Cuando `develop` está lista para un release, se crea una rama `release-X.Y.Z`
+3. **Producción**: La rama de release se integra en `main` y se etiqueta con la versión
+4. **Hotfix**: Los hotfixes se crean desde `main` y se integran en `main` y `develop`
+
+### 5.3 Comandos GitFlow
+
 ```bash
-# Generar esquema actual
-docker exec -it db-equipo bash
-pg_dump -U mads -s mads > /mi-host/schema-1.3.0.sql
+# Crear rama de release
+git checkout develop
+git checkout -b release-1.3.0
 
-# Aplicar migración
-docker exec -it db-equipo bash
-psql -U mads mads < /mi-host/schema-1.2.0-1.3.0.sql
+# Integrar release en main
+git checkout main
+git merge release-1.3.0
+git tag -a v1.3.0 -m "Release version 1.3.0"
+
+# Integrar release en develop
+git checkout develop
+git merge release-1.3.0
+
+# Eliminar rama de release
+git branch -d release-1.3.0
 ```
 
-## Esquemas de datos
+---
 
-### Versión 1.2.0
-[El esquema se generará al ejecutar la aplicación con el perfil postgres]
+## 6. URL de la imagen Docker
 
-### Versión 1.3.0
-[El esquema se generará al ejecutar la aplicación con el perfil postgres]
+**Imagen Docker Hub**: `bryanhert/mads-todolist:1.3.0`
 
-### Script de migración
-[Se creará comparando los esquemas de las versiones 1.2.0 y 1.3.0]
-
-## URL de la imagen Docker
-
-La imagen Docker estará disponible en:
-```
-<usuario-docker>/mads-todolist-equipoXX:1.3.0-snapshot
-```
-
-## Flujo de trabajo GitFlow implementado
-
-### Ramas principales:
-- `main`: Código en producción
-- `develop`: Rama de desarrollo principal
-
-### Ramas de feature:
-- Salen de `develop`
-- Se integran en `develop` mediante Pull Requests
-- Requieren revisión de código obligatoria
-
-### Ramas de release:
-- Salen de `develop`
-- Se integran en `main` y `develop`
-- Incluyen cambios específicos de versión (números de versión, esquemas de BD)
-
-## Comandos Git para trabajo en equipo
-
-### Trabajar en ramas compartidas:
+**Comando para descargar**:
 ```bash
-# Crear y subir rama (responsable del issue)
-git checkout -b nueva-rama
-git push -u origin nueva-rama
-
-# Descargar rama (otros miembros)
-git pull
-git checkout nueva-rama
-
-# Subir cambios
-git add .
-git commit -m "Mis cambios"
-git push
-
-# Resolver conflictos
-git pull
-# Editar archivos en conflicto
-git add .
-git commit -m "Arreglado conflicto"
-git push
+docker pull bryanhert/mads-todolist:1.3.0
 ```
 
-### Configuración de revisión de código:
-- Requerir 1 revisor mínimo en Pull Requests
-- Configurar protección de rama `main` y `develop`
-- Obligar revisión antes de merge
+**Comando para construir localmente**:
+```bash
+./mvnw package
+docker build -t bryanhert/mads-todolist:1.3.0 .
+```
 
-## Próximos pasos
+---
 
-1. [ ] Configurar equipo en GitHub
-2. [ ] Crear tablero de proyecto
-3. [ ] Implementar GitFlow completo
-4. [ ] Desarrollar features en equipo
-5. [ ] Crear release 1.3.0
-6. [ ] Desplegar en producción
-7. [ ] Documentar migraciones de base de datos 
+## 7. Pruebas de funcionamiento
+
+### 7.1 Prueba del perfil de producción
+
+Para verificar que el perfil de producción funciona correctamente:
+
+1. Lanzar base de datos vacía
+2. Intentar ejecutar aplicación con perfil `postgres-prod`
+3. Verificar que falla (esquema no existe)
+4. Restaurar esquema de datos
+5. Verificar que funciona correctamente
+
+### 7.2 Prueba de migración
+
+1. Restaurar copia de seguridad de versión anterior
+2. Aplicar script de migración
+3. Verificar que la aplicación funciona con los datos existentes
+
+---
+
+## 8. Conclusiones
+
+La implementación de GitFlow y el despliegue en producción ha permitido:
+
+- **Control de versiones**: Gestión estructurada de releases
+- **Seguridad en producción**: Validación de esquema sin modificaciones automáticas
+- **Automatización**: Scripts para facilitar el despliegue
+- **Backup y recuperación**: Procedimientos para proteger los datos
+- **Escalabilidad**: Arquitectura preparada para futuras versiones
+
+La aplicación está lista para ser desplegada en un entorno de producción real con todas las garantías de seguridad y mantenimiento necesarias. 
