@@ -1,67 +1,49 @@
 # Práctica 4: Trabajo en equipo con GitFlow y despliegue en producción
 
-## Equipo XX - ToDoList Spring Boot
+## Equipo 2 - ToDoList Spring Boot
 
 ### Miembros del equipo:
-- Bryan David Salazar Morocho
-- [Nombre del segundo miembro]
-- [Nombre del tercer miembro]
+- Bryan  Salazar 
+- Francisco Tamayo
+- Maicol Nacimba
 
 ---
 
-## 1. Documentación técnica de los cambios introducidos
+## 1. Breve documentación técnica de los cambios introducidos
 
-### 1.1 Configuración Docker mejorada
+### 1.1 Cambios principales en la versión 1.3.0
+- Se añadió el campo `fecha_registro` a la tabla `usuarios` para auditoría.
+- Se creó un índice sobre el campo `email` en la tabla `usuarios` para mejorar el rendimiento de búsqueda.
+- Scripts de migración y esquemas de datos actualizados.
+- Scripts de despliegue multiplataforma (Linux/Mac y Windows).
 
-Se ha actualizado el `Dockerfile` para permitir el paso de parámetros de configuración:
+### 1.2 Priorización de tareas
 
-```dockerfile
-FROM openjdk:8-jdk-alpine
-COPY target/*.jar app.jar
+A partir de la versión 1.3.0, los usuarios pueden asignar una prioridad a cada tarea para organizar mejor su trabajo según la importancia:
+- **Alta**: Tareas urgentes o críticas.
+- **Media**: Tareas importantes pero no urgentes (valor por defecto).
+- **Baja**: Tareas de menor importancia.
 
-ENTRYPOINT ["sh","-c","java -Djava.security.egd=file:/dev/urandom -jar /app.jar ${0} ${@}"]
-```
+**Creación y edición:**
+- Al crear o editar una tarea, el usuario puede seleccionar la prioridad desde un menú desplegable en el formulario.
+- Si no se selecciona ninguna prioridad, se asigna "Media" por defecto.
 
-Esta configuración permite ejecutar el contenedor con parámetros adicionales:
-```bash
-docker run --rm usuario/mads-todolist:1.3.0 --spring.profiles.active=postgres --POSTGRES_HOST=host-prueba
-```
+**Visualización:**
+- En la lista de tareas, la prioridad se muestra con una etiqueta de color:
+  - Alta: rojo
+  - Media: amarillo
+  - Baja: verde
 
-### 1.2 Configuración de PostgreSQL con variables de entorno
-
-El archivo `application-postgres.properties` utiliza variables de entorno para la configuración:
-
-```properties
-POSTGRES_HOST=localhost
-POSTGRES_PORT=5432
-DB_USER=mads
-DB_PASSWD=mads
-
-spring.datasource.url=jdbc:postgresql://${POSTGRES_HOST}:${POSTGRES_PORT}/mads
-spring.datasource.username=${DB_USER}
-spring.datasource.password=${DB_PASSWD}
-spring.jpa.properties.hibernate.dialect = org.hibernate.dialect.PostgreSQL9Dialect
-spring.jpa.hibernate.ddl-auto=update
-spring.sql.init.mode=never
-```
-
-### 1.3 Perfil de producción
-
-Se ha creado el archivo `application-postgres-prod.properties` con configuración específica para producción:
-
-```properties
-# Misma configuración que postgres pero con:
-spring.jpa.hibernate.ddl-auto=validate
-```
-
-El modo `validate` asegura que la aplicación no modifique automáticamente el esquema de la base de datos en producción.
+**Implementación técnica:**
+- Se utiliza la enumeración `PrioridadTarea` en el backend (`ALTA`, `MEDIA`, `BAJA`).
+- El modelo, DTO y formularios están adaptados para soportar la prioridad.
+- Los controladores pasan la lista de prioridades a las vistas para que el usuario pueda elegir.
 
 ---
 
 ## 2. Detalles del despliegue de producción
 
 ### 2.1 Arquitectura de despliegue
-
 La aplicación se despliega usando dos contenedores Docker conectados por una red:
 
 1. **Contenedor de base de datos**: PostgreSQL 13
@@ -92,32 +74,33 @@ docker run -d \
 docker run --rm \
   --network network-equipo \
   -p 8080:8080 \
-  bryanhert/mads-todolist:1.3.0 \
+  bryanhert/mads-todolist-equipo2:1.3.0 \
   --spring.profiles.active=postgres-prod \
   --POSTGRES_HOST=postgres
 ```
 
 ### 2.3 Scripts de automatización
-
-Se han creado scripts para automatizar el despliegue:
 - `deploy-production.sh` (Linux/Mac)
 - `deploy-production.ps1` (Windows PowerShell)
 
 ---
 
-## 3. Esquemas de datos
+## 3. Esquemas de datos de las versiones 1.2.0 y 1.3.0
 
 ### 3.1 Esquema versión 1.2.0
-
 Archivo: `sql/schema-1.2.0.sql`
-
 ```sql
+-- Esquema de datos versión 1.2.0
+-- Generado automáticamente por Hibernate
+
 CREATE TABLE public.usuarios (
     id bigint NOT NULL,
     email character varying(255) NOT NULL,
     nombre character varying(255),
     password character varying(255),
-    bloqueado boolean DEFAULT false,
+    fecha_nacimiento date,
+    admin boolean DEFAULT false NOT NULL,
+    bloqueado boolean DEFAULT false NOT NULL,
     PRIMARY KEY (id)
 );
 
@@ -131,108 +114,132 @@ CREATE TABLE public.tareas (
     PRIMARY KEY (id),
     FOREIGN KEY (usuario_id) REFERENCES public.usuarios(id)
 );
+
+-- Secuencias para los IDs
+CREATE SEQUENCE public.usuarios_id_seq START WITH 1 INCREMENT BY 1;
+CREATE SEQUENCE public.tareas_id_seq START WITH 1 INCREMENT BY 1;
+
+-- Datos iniciales de prueba
+INSERT INTO public.usuarios (id, email, nombre, password, admin, bloqueado) VALUES 
+(1, 'user@ua', 'Usuario de Prueba', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKTVEFDa', false, false); 
 ```
 
 ### 3.2 Esquema versión 1.3.0
-
 Archivo: `sql/schema-1.3.0.sql`
-
-El esquema de la versión 1.3.0 es idéntico al de la 1.2.0, ya que no se han introducido cambios en el modelo de datos.
-
-### 3.3 Script de migración
-
-Archivo: `sql/schema-1.2.0-1.3.0.sql`
-
 ```sql
--- Script de migración de la versión 1.2.0 a la 1.3.0
--- No hay cambios en el esquema de datos entre estas versiones
--- Este script se mantiene como plantilla para futuras migraciones
+-- Esquema de datos versión 1.3.0
+-- Generado automáticamente por Hibernate
+
+CREATE TABLE public.usuarios (
+    id bigint NOT NULL,
+    email character varying(255) NOT NULL,
+    nombre character varying(255),
+    password character varying(255),
+    fecha_nacimiento date,
+    admin boolean DEFAULT false NOT NULL,
+    bloqueado boolean DEFAULT false NOT NULL,
+    fecha_registro timestamp DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (id)
+);
+
+CREATE TABLE public.tareas (
+    id bigint NOT NULL,
+    titulo character varying(255),
+    descripcion text,
+    fecha_limite timestamp,
+    completada boolean DEFAULT false,
+    usuario_id bigint,
+    PRIMARY KEY (id),
+    FOREIGN KEY (usuario_id) REFERENCES public.usuarios(id)
+);
+
+-- Secuencias para los IDs
+CREATE SEQUENCE public.usuarios_id_seq START WITH 1 INCREMENT BY 1;
+CREATE SEQUENCE public.tareas_id_seq START WITH 1 INCREMENT BY 1;
+
+-- Índices para mejorar el rendimiento
+CREATE INDEX idx_usuarios_email ON public.usuarios(email);
+
+-- Datos iniciales de prueba
+INSERT INTO public.usuarios (id, email, nombre, password, admin, bloqueado, fecha_registro) VALUES 
+(1, 'user@ua', 'Usuario de Prueba', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKTVEFDa', false, false, CURRENT_TIMESTAMP); 
 ```
 
 ---
 
-## 4. Gestión de copias de seguridad
+## 4. Script de migración de la base de datos
+Archivo: `sql/schema-1.2.0-1.3.0.sql`
+```sql
+-- Script de migración de la versión 1.2.0 a la 1.3.0
+-- Este script actualiza la base de datos de producción de la versión 1.2.0 a la 1.3.0
 
-### 4.1 Crear copia de seguridad
+-- Añadir campo fecha_registro a la tabla usuarios
+ALTER TABLE public.usuarios ADD COLUMN fecha_registro timestamp DEFAULT CURRENT_TIMESTAMP;
 
+-- Crear índice para mejorar el rendimiento de búsquedas por email
+CREATE INDEX idx_usuarios_email ON public.usuarios(email);
+
+-- Comentario: Esta migración añade un campo de auditoría a la tabla usuarios
+-- El campo se añade con valor por defecto para mantener la compatibilidad 
+```
+
+---
+
+## 5. URL de la imagen Docker de la aplicación
+
+La imagen Docker de la aplicación está disponible en:
+
+https://hub.docker.com/repository/docker/bryanhert/mads-todolist-equipo2/tags
+
+---
+
+## 6. Gestión de copias de seguridad
+
+### 6.1 Crear copia de seguridad
 ```bash
 docker exec -it db-equipo bash
 pg_dump -U mads --clean mads > /mi-host/backup-$(date +%Y%m%d).sql
 exit
 ```
 
-### 4.2 Restaurar copia de seguridad
-
+### 6.2 Restaurar copia de seguridad
 ```bash
 docker exec -it db-equipo bash
 psql -U mads mads < /mi-host/backup-YYYYMMDD.sql
 exit
 ```
 
-### 4.3 Copias de seguridad disponibles
-
+### 6.3 Copias de seguridad disponibles
 - `sql/backup-20250704.sql` - Copia de seguridad del 4 de julio de 2025
 
 ---
 
-## 5. Implementación de GitFlow
+## 7. Implementación de GitFlow
 
-### 5.1 Estructura de ramas
-
+### 7.1 Estructura de ramas
 - **main**: Rama principal para releases
 - **develop**: Rama de desarrollo
 - **release-1.3.0**: Rama de release para la versión 1.3.0
 - **feature/***: Ramas de características
 
-### 5.2 Flujo de trabajo
-
+### 7.2 Flujo de trabajo
 1. **Desarrollo**: Las nuevas características se desarrollan en ramas `feature/*` desde `develop`
 2. **Release**: Cuando `develop` está lista para un release, se crea una rama `release-X.Y.Z`
 3. **Producción**: La rama de release se integra en `main` y se etiqueta con la versión
 4. **Hotfix**: Los hotfixes se crean desde `main` y se integran en `main` y `develop`
 
-### 5.3 Comandos GitFlow
-
+### 7.3 Comandos GitFlow
 ```bash
 # Crear rama de release
 git checkout develop
 git checkout -b release-1.3.0
-
-# Integrar release en main
-git checkout main
-git merge release-1.3.0
-git tag -a v1.3.0 -m "Release version 1.3.0"
-
-# Integrar release en develop
-git checkout develop
-git merge release-1.3.0
-
-# Eliminar rama de release
-git branch -d release-1.3.0
 ```
 
 ---
 
-## 6. URL de la imagen Docker
+## 8. Pruebas de funcionamiento
 
-**Imagen Docker Hub**: `bryanhert/mads-todolist:1.3.0`
-
-**Comando para descargar**:
-```bash
-docker pull bryanhert/mads-todolist:1.3.0
-```
-
-**Comando para construir localmente**:
-```bash
-./mvnw package
-docker build -t bryanhert/mads-todolist:1.3.0 .
-```
-
----
-
-## 7. Pruebas de funcionamiento
-
-### 7.1 Prueba del perfil de producción
+### 8.1 Prueba del perfil de producción
 
 Para verificar que el perfil de producción funciona correctamente:
 
@@ -242,7 +249,7 @@ Para verificar que el perfil de producción funciona correctamente:
 4. Restaurar esquema de datos
 5. Verificar que funciona correctamente
 
-### 7.2 Prueba de migración
+### 8.2 Prueba de migración
 
 1. Restaurar copia de seguridad de versión anterior
 2. Aplicar script de migración
@@ -250,7 +257,7 @@ Para verificar que el perfil de producción funciona correctamente:
 
 ---
 
-## 8. Conclusiones
+## 9. Conclusiones
 
 La implementación de GitFlow y el despliegue en producción ha permitido:
 
@@ -260,4 +267,3 @@ La implementación de GitFlow y el despliegue en producción ha permitido:
 - **Backup y recuperación**: Procedimientos para proteger los datos
 - **Escalabilidad**: Arquitectura preparada para futuras versiones
 
-La aplicación está lista para ser desplegada en un entorno de producción real con todas las garantías de seguridad y mantenimiento necesarias. 

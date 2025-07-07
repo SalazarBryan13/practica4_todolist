@@ -1,6 +1,11 @@
-# Aplicación inicial ToDoList
+# ToDoList Spring Boot - Equipo 2
 
 Aplicación ToDoList de la asignatura Metodologías Ágiles 2025-A EPN usando Spring Boot y plantillas Thymeleaf.
+
+## Equipo de desarrollo
+- Bryan David Salazar Morocho
+- Francisco Tamayo
+- Maicol Nacimba
 
 ## Descripción funcional
 Esta aplicación permite a los usuarios:
@@ -16,44 +21,81 @@ Esta aplicación permite a los usuarios:
 - `src/main/java/madstodolist/repository`: Repositorios de acceso a datos.
 - `src/main/resources/templates`: Vistas Thymeleaf.
 - `src/test/java/madstodolist`: Pruebas automáticas (controladores, servicios, repositorios).
+- `sql/`: Esquemas de base de datos y scripts de migración.
 - `doc/`: Documentación técnica y de la práctica.
 
-## Enlace a tablero Trello (público)
-El tablero Trello es público para su revisión:
-https://trello.com/invite/b/683cd785831c50fb567856c0/ATTI2df8539ec62c0a21f78f18068105074c019CE665/todolist-epn
+
 
 ## Imagen Docker
 La imagen está disponible en Docker Hub:
-https://hub.docker.com/r/bryanhert/mads-todolist
+https://hub.docker.com/repository/docker/bryanhert/mads-todolist-equipo2/tags
 
-## Requisitos
+## Despliegue en producción
 
-Necesitas tener instalado en tu sistema:
-- Java 8
-- Maven
+### Arquitectura
+La aplicación se despliega usando dos contenedores Docker conectados por una red:
+1. **Contenedor de base de datos**: PostgreSQL 13
+2. **Contenedor de aplicación**: Spring Boot con perfil postgres-prod
 
-## Ejecución
+### Comandos de despliegue
+
+Crear red de Docker:
+```bash
+docker network create network-equipo
+```
+
+Lanzar base de datos:
+```bash
+docker run -d \
+  --network network-equipo \
+  --network-alias postgres \
+  -v ${PWD}:/mi-host \
+  --name db-equipo \
+  -e POSTGRES_USER=mads \
+  -e POSTGRES_PASSWORD=mads \
+  -e POSTGRES_DB=mads \
+  postgres:13
+```
+
+Lanzar aplicación:
+```bash
+docker run --rm \
+  --network network-equipo \
+  -p 8080:8080 \
+  bryanhert/mads-todolist-equipo2:1.3.0 \
+  --spring.profiles.active=postgres-prod \
+  --POSTGRES_HOST=postgres
+```
+
+### Scripts de automatización
+
+- `deploy-production.ps1`: Despliegue en producción (Windows PowerShell)
+
+- `deploy-development.ps1`: Despliegue en entorno de desarrollo (Windows PowerShell)
+
+
+## Esquemas de datos y migraciones
+- Esquema versión 1.2.0: `sql/schema-1.2.0.sql`
+- Esquema versión 1.3.0: `sql/schema-1.3.0.sql`
+- Script de migración: `sql/schema-1.2.0-1.3.0.sql`
+- Copia de seguridad: `sql/backup-20250704.sql`
+
+## Ejecución en desarrollo
 
 Puedes ejecutar la aplicación usando el _goal_ `run` del _plugin_ Maven de Spring Boot:
-
-```
-$ ./mvnw spring-boot:run 
-```   
-
-También puedes generar un `jar` y ejecutarlo:
-
-```
-$ ./mvnw package
-$ java -jar target/epn-todolist-Bryan_Salazar-1.0.1-SNAPSHOT.jar
+```bash
+./mvnw spring-boot:run
 ```
 
-Una vez lanzada la aplicación puedes abrir un navegador y probar la página de inicio:
-- [http://localhost:8080/login](http://localhost:8080/login)
+O generar un `jar` y ejecutarlo:
+```bash
+./mvnw package
+java -jar target/epn-todolist-Bryan_Salazar-1.0.1-SNAPSHOT.jar
+```
 
 ## Ejecución con Docker
-También puedes ejecutar la aplicación directamente con Docker:
-```
-docker run --rm -p 8080:8080 bryanhert/mads-todolist:1.0.1
+```bash
+docker run --rm -p 8080:8080 bryanhert/mads-todolist-equipo2:1.3.0
 ```
 
 ## Credenciales de prueba
@@ -62,9 +104,8 @@ docker run --rm -p 8080:8080 bryanhert/mads-todolist:1.0.1
 - (Puedes crear nuevos usuarios desde la página de registro)
 
 ## Cómo correr los tests
-Para ejecutar todos los tests automáticos:
-```
-$ ./mvnw test
+```bash
+./mvnw test
 ```
 
 ## Repositorio GitHub
@@ -78,9 +119,7 @@ https://github.com/SalazarBryan13/TodoListSpringBoot
 4. Haz push a tu rama: `git push origin mi-feature`.
 5. Abre un Pull Request en GitHub.
 
-## Licencia
-Este proyecto es solo para fines educativos en la EPN. No se distribuye bajo una licencia específica.
+## Documentación técnica
+Consulta la documentación técnica y detalles de despliegue en `doc/practica4.md`.
 
-## Contacto
-Para dudas o soporte, contacta a: bryan.salazar@epn.edu.ec
 
