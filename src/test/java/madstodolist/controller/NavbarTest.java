@@ -54,11 +54,14 @@ public class NavbarTest {
     public void navbarEnTareas() throws Exception {
         // GIVEN
         // Un usuario registrado
-        UsuarioData usuarioData = new UsuarioData();
-        usuarioData.setEmail("test@ua");
-        usuarioData.setPassword("123");
-        usuarioData.setNombre("Usuario Test");
-        UsuarioData usuarioRegistrado = usuarioService.registrar(usuarioData);
+        UsuarioData usuarioRegistrado = usuarioService.findByEmail("test@ua");
+        if (usuarioRegistrado == null) {
+            UsuarioData usuarioData = new UsuarioData();
+            usuarioData.setEmail("test@ua");
+            usuarioData.setPassword("123");
+            usuarioData.setNombre("Usuario Test");
+            usuarioRegistrado = usuarioService.registrar(usuarioData);
+        }
 
         // Configurar el ManagerUserSession para que devuelva el ID del usuario
         when(managerUserSession.usuarioLogeado()).thenReturn(usuarioRegistrado.getId());
@@ -76,11 +79,14 @@ public class NavbarTest {
     public void navbarEnAbout() throws Exception {
         // GIVEN
         // Un usuario registrado
-        UsuarioData usuarioData = new UsuarioData();
-        usuarioData.setEmail("test@ua");
-        usuarioData.setPassword("123");
-        usuarioData.setNombre("Usuario Test");
-        UsuarioData usuarioRegistrado = usuarioService.registrar(usuarioData);
+        UsuarioData usuarioRegistrado = usuarioService.findByEmail("test@ua");
+        if (usuarioRegistrado == null) {
+            UsuarioData usuarioData = new UsuarioData();
+            usuarioData.setEmail("test@ua");
+            usuarioData.setPassword("123");
+            usuarioData.setNombre("Usuario Test");
+            usuarioRegistrado = usuarioService.registrar(usuarioData);
+        }
 
         // Configurar el ManagerUserSession para que devuelva el ID del usuario
         when(managerUserSession.usuarioLogeado()).thenReturn(usuarioRegistrado.getId());
