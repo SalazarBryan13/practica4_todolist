@@ -2,6 +2,7 @@ package madstodolist.service;
 
 import madstodolist.dto.TareaData;
 import madstodolist.dto.UsuarioData;
+import madstodolist.model.PrioridadTarea;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -225,5 +226,43 @@ public class TareaServiceTest {
             tareaService.usuarioContieneTarea(usuarioId, 999L);
         }).isInstanceOf(TareaServiceException.class)
           .hasMessageContaining("No existe tarea o usuario");
+    }
+
+    @Test
+    public void nuevaTareaConPrioridad() {
+        // GIVEN
+        // Un usuario en la BD
+        Map<String, Long> ids = addUsuarioTareasBD();
+        Long usuarioId = ids.get("usuarioId");
+
+        // WHEN
+        // Añadimos una nueva tarea al usuario con prioridad alta
+        TareaData tarea = tareaService.nuevaTareaUsuario(usuarioId, "Nueva tarea con prioridad alta", PrioridadTarea.ALTA);
+
+        // THEN
+        // La tarea se crea correctamente con los datos proporcionados y prioridad alta
+        assertThat(tarea).isNotNull();
+        assertThat(tarea.getTitulo()).isEqualTo("Nueva tarea con prioridad alta");
+        assertThat(tarea.getId()).isNotNull();
+        assertThat(tarea.getPrioridad()).isEqualTo(PrioridadTarea.ALTA);
+    }
+
+    @Test
+    public void modificaTareaPrioridad() {
+        // GIVEN
+        // Un usuario con tareas en la BD
+        Map<String, Long> ids = addUsuarioTareasBD();
+        Long tareaId = ids.get("tareaId");
+
+        // WHEN
+        // Modificamos la prioridad de la tarea
+        TareaData tareaModificada = tareaService.modificaTarea(tareaId, "Modificar tarea", PrioridadTarea.BAJA);
+
+        // THEN
+        // La tarea se modifica correctamente
+        assertThat(tareaModificada).isNotNull();
+        assertThat(tareaModificada.getId()).isEqualTo(tareaId);
+        assertThat(tareaModificada.getTitulo()).isEqualTo("Modificar tarea");
+        assertThat(tareaModificada.getPrioridad()).isEqualTo(PrioridadTarea.BAJA);
     }
 }

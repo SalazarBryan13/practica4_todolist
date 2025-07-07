@@ -17,6 +17,10 @@ public class Tarea implements Serializable {
     @NotNull
     private String titulo;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "prioridad")
+    private PrioridadTarea prioridad = PrioridadTarea.MEDIA; // Prioridad por defecto
+
     @NotNull
     // Relación muchos-a-uno entre tareas y usuario
     @ManyToOne
@@ -32,7 +36,15 @@ public class Tarea implements Serializable {
     // Al crear una tarea la asociamos automáticamente a un usuario
     public Tarea(Usuario usuario, String titulo) {
         this.titulo = titulo;
+        this.prioridad = PrioridadTarea.MEDIA; // Prioridad por defecto
         setUsuario(usuario); // Esto añadirá la tarea a la lista de tareas del usuario
+    }
+
+    // Constructor con prioridad
+    public Tarea(Usuario usuario, String titulo, PrioridadTarea prioridad) {
+        this.titulo = titulo;
+        this.prioridad = prioridad != null ? prioridad : PrioridadTarea.MEDIA;
+        setUsuario(usuario);
     }
 
     // Getters y setters básicos
@@ -51,6 +63,14 @@ public class Tarea implements Serializable {
 
     public void setTitulo(String titulo) {
         this.titulo = titulo;
+    }
+
+    public PrioridadTarea getPrioridad() {
+        return prioridad;
+    }
+
+    public void setPrioridad(PrioridadTarea prioridad) {
+        this.prioridad = prioridad != null ? prioridad : PrioridadTarea.MEDIA;
     }
 
     // Getters y setters de la relación muchos-a-uno con Usuario
