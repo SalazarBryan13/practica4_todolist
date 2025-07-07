@@ -5,6 +5,7 @@ import madstodolist.controller.exception.UsuarioNoLogeadoException;
 import madstodolist.controller.exception.TareaNotFoundException;
 import madstodolist.dto.TareaData;
 import madstodolist.dto.UsuarioData;
+import madstodolist.model.PrioridadTarea;
 import madstodolist.service.TareaService;
 import madstodolist.service.UsuarioService;
 import org.slf4j.Logger;
@@ -56,6 +57,7 @@ public class TareaController {
 
         UsuarioData usuario = usuarioService.findById(idUsuario);
         model.addAttribute("usuario", usuario);
+        model.addAttribute("prioridades", PrioridadTarea.values());
         return "formNuevaTarea";
     }
 
@@ -69,7 +71,7 @@ public class TareaController {
 
         comprobarUsuarioLogeado(idUsuario);
 
-        tareaService.nuevaTareaUsuario(idUsuario, tareaData.getTitulo());
+        tareaService.nuevaTareaUsuario(idUsuario, tareaData.getTitulo(), tareaData.getPrioridad());
         flash.addFlashAttribute("mensaje", "Tarea creada correctamente");
         return "redirect:/usuarios/" + idUsuario + "/tareas";
      }
@@ -104,6 +106,7 @@ public class TareaController {
         logger.debug("UsuarioId de la tarea: {}", tarea.getUsuarioId());
         comprobarUsuarioLogeado(tarea.getUsuarioId());
         model.addAttribute("tarea", tarea);
+        model.addAttribute("prioridades", PrioridadTarea.values());
         logger.debug("Atributo 'tarea' añadido al modelo: {}", tarea);
         Long idUsuarioLogeado = managerUserSession.usuarioLogeado();
         if (idUsuarioLogeado != null) {
@@ -129,7 +132,7 @@ public class TareaController {
         Long idUsuario = tareaExistente.getUsuarioId();
         logger.debug("UsuarioId de la tarea existente: {}", idUsuario);
         comprobarUsuarioLogeado(idUsuario);
-        tareaService.modificaTarea(idTarea, tarea.getTitulo());
+        tareaService.modificaTarea(idTarea, tarea.getTitulo(), tarea.getPrioridad());
         logger.debug("Tarea modificada correctamente");
         flash.addFlashAttribute("mensaje", "Tarea modificada correctamente");
         return "redirect:/usuarios/" + tareaExistente.getUsuarioId() + "/tareas";

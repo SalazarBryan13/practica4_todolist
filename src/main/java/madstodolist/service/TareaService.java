@@ -1,6 +1,7 @@
 package madstodolist.service;
 
 import madstodolist.model.Tarea;
+import madstodolist.model.PrioridadTarea;
 import madstodolist.repository.TareaRepository;
 import madstodolist.model.Usuario;
 import madstodolist.repository.UsuarioRepository;
@@ -37,7 +38,19 @@ public class TareaService {
         if (usuario == null) {
             throw new TareaServiceException("Usuario " + idUsuario + " no existe al crear tarea " + tituloTarea);
         }
-        Tarea tarea = new Tarea(usuario, tituloTarea);
+        Tarea tarea = new Tarea(usuario, tituloTarea, PrioridadTarea.MEDIA);
+        tareaRepository.save(tarea);
+        return modelMapper.map(tarea, TareaData.class);
+    }
+
+    @Transactional
+    public TareaData nuevaTareaUsuario(Long idUsuario, String tituloTarea, PrioridadTarea prioridad) {
+        logger.debug("Añadiendo tarea " + tituloTarea + " al usuario " + idUsuario + " con prioridad " + prioridad);
+        Usuario usuario = usuarioRepository.findById(idUsuario).orElse(null);
+        if (usuario == null) {
+            throw new TareaServiceException("Usuario " + idUsuario + " no existe al crear tarea " + tituloTarea);
+        }
+        Tarea tarea = new Tarea(usuario, tituloTarea, prioridad);
         tareaRepository.save(tarea);
         return modelMapper.map(tarea, TareaData.class);
     }
@@ -74,6 +87,19 @@ public class TareaService {
             throw new TareaServiceException("No existe tarea con id " + idTarea);
         }
         tarea.setTitulo(nuevoTitulo);
+        tarea = tareaRepository.save(tarea);
+        return modelMapper.map(tarea, TareaData.class);
+    }
+
+    @Transactional
+    public TareaData modificaTarea(Long idTarea, String nuevoTitulo, PrioridadTarea nuevaPrioridad) {
+        logger.debug("Modificando tarea " + idTarea + " - " + nuevoTitulo + " con prioridad " + nuevaPrioridad);
+        Tarea tarea = tareaRepository.findById(idTarea).orElse(null);
+        if (tarea == null) {
+            throw new TareaServiceException("No existe tarea con id " + idTarea);
+        }
+        tarea.setTitulo(nuevoTitulo);
+        tarea.setPrioridad(nuevaPrioridad);
         tarea = tareaRepository.save(tarea);
         return modelMapper.map(tarea, TareaData.class);
     }
