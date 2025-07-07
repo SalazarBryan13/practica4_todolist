@@ -171,4 +171,26 @@ public class UsuarioTest {
 
         assertThat(usuarioBD.getNombre()).isEqualTo("Usuario Ejemplo");
     }
+
+    @Test
+    @Transactional
+    public void fechaRegistroSeAsignaAlCrearUsuario() {
+        // GIVEN
+        Usuario usuario = new Usuario("nuevo@ua");
+        usuario.setNombre("Nuevo Usuario");
+        usuario.setPassword("claveSegura");
+        usuario.setFechaRegistro(new java.util.Date()); // Asignar manualmente
+
+        // WHEN
+        usuarioRepository.save(usuario);
+
+        // THEN
+        Usuario usuarioBD = usuarioRepository.findById(usuario.getId()).orElse(null);
+        assertThat(usuarioBD).isNotNull();
+        assertThat(usuarioBD.getFechaRegistro()).isNotNull();
+        // Opcional: comprobar que la fecha es "reciente" (menos de 1 minuto de diferencia)
+        long ahora = System.currentTimeMillis();
+        long fechaRegistro = usuarioBD.getFechaRegistro().getTime();
+        assertThat(Math.abs(ahora - fechaRegistro)).isLessThan(60000L); // 1 minuto
+    }
 }
