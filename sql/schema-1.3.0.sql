@@ -6,7 +6,9 @@ CREATE TABLE public.usuarios (
     email character varying(255) NOT NULL,
     nombre character varying(255),
     password character varying(255),
-    bloqueado boolean DEFAULT false,
+    fecha_nacimiento date,
+    admin boolean DEFAULT false NOT NULL,
+    bloqueado boolean DEFAULT false NOT NULL,
     fecha_registro timestamp DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (id)
 );
@@ -30,5 +32,5 @@ CREATE SEQUENCE public.tareas_id_seq START WITH 1 INCREMENT BY 1;
 CREATE INDEX idx_usuarios_email ON public.usuarios(email);
 
 -- Datos iniciales de prueba
-INSERT INTO public.usuarios (id, email, nombre, password, bloqueado, fecha_registro) VALUES 
-(1, 'user@ua', 'Usuario de Prueba', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKTVEFDa', false, CURRENT_TIMESTAMP); 
+INSERT INTO public.usuarios (id, email, nombre, password, admin, bloqueado, fecha_registro) VALUES 
+(1, 'user@ua', 'Usuario de Prueba', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKTVEFDa', false, false, CURRENT_TIMESTAMP); 
