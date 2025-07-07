@@ -1,6 +1,6 @@
 # ToDoList Spring Boot - Equipo 2
 
-Aplicación ToDoList de la asignatura Metodologías Ágiles 2025-A EPN usando Spring Boot y plantillas Thymeleaf.
+Aplicación ToDoList de la asignatura Metodologías Ágiles  usando Spring Boot .
 
 ## Equipo de desarrollo
 - Bryan  Salazar 
