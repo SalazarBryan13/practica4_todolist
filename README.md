@@ -84,3 +84,4 @@ Este proyecto es solo para fines educativos en la EPN. No se distribuye bajo una
 ## Contacto
 Para dudas o soporte, contacta a: bryan.salazar@epn.edu.ec
 
+- linea de prueba de conflicto, modificada por maicol
