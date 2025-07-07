@@ -3,7 +3,7 @@
 Aplicación ToDoList de la asignatura Metodologías Ágiles 2025-A EPN usando Spring Boot y plantillas Thymeleaf.
 
 ## Equipo de desarrollo
-- Bryan David Salazar Morocho
+- Bryan  Salazar 
 - Francisco Tamayo
 - Maicol Nacimba
 
