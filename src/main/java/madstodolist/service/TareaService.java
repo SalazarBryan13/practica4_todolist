@@ -15,9 +15,7 @@ import org.modelmapper.ModelMapper;
 
 import java.util.Collections;
 import java.util.List;
-
 import java.util.stream.Collectors;
-
 
 @Service
 public class TareaService {
@@ -30,6 +28,8 @@ public class TareaService {
     private TareaRepository tareaRepository;
     @Autowired
     private ModelMapper modelMapper;
+    @Autowired
+    private NotificacionService notificacionService;
 
     @Transactional
     public TareaData nuevaTareaUsuario(Long idUsuario, String tituloTarea) {
@@ -40,6 +40,7 @@ public class TareaService {
         }
         Tarea tarea = new Tarea(usuario, tituloTarea, PrioridadTarea.MEDIA);
         tareaRepository.save(tarea);
+        notificacionService.crearNotificacion(tarea, usuario, "Nueva tarea creada: " + tituloTarea);
         return modelMapper.map(tarea, TareaData.class);
     }
 
@@ -52,6 +53,7 @@ public class TareaService {
         }
         Tarea tarea = new Tarea(usuario, tituloTarea, prioridad);
         tareaRepository.save(tarea);
+        notificacionService.crearNotificacion(tarea, usuario, "Nueva tarea creada: " + tituloTarea + " (Prioridad: " + prioridad + ")");
         return modelMapper.map(tarea, TareaData.class);
     }
 
@@ -62,11 +64,9 @@ public class TareaService {
         if (usuario == null) {
             throw new TareaServiceException("Usuario " + idUsuario + " no existe al listar tareas ");
         }
-        // Hacemos uso de Java Stream API para mapear la lista de entidades a DTOs.
         List<TareaData> tareas = usuario.getTareas().stream()
                 .map(tarea -> modelMapper.map(tarea, TareaData.class))
                 .collect(Collectors.toList());
-        // Ordenamos la lista por id de tarea
         Collections.sort(tareas, (a, b) -> a.getId() < b.getId() ? -1 : a.getId() == b.getId() ? 0 : 1);
         return tareas;
     }
@@ -86,8 +86,11 @@ public class TareaService {
         if (tarea == null) {
             throw new TareaServiceException("No existe tarea con id " + idTarea);
         }
+        String antiguoTitulo = tarea.getTitulo();
         tarea.setTitulo(nuevoTitulo);
         tarea = tareaRepository.save(tarea);
+        notificacionService.crearNotificacion(tarea, tarea.getUsuario(), 
+            "Tarea modificada: " + antiguoTitulo + " → " + nuevoTitulo);
         return modelMapper.map(tarea, TareaData.class);
     }
 
@@ -98,9 +101,14 @@ public class TareaService {
         if (tarea == null) {
             throw new TareaServiceException("No existe tarea con id " + idTarea);
         }
+        String antiguoTitulo = tarea.getTitulo();
+        PrioridadTarea antiguaPrioridad = tarea.getPrioridad();
         tarea.setTitulo(nuevoTitulo);
         tarea.setPrioridad(nuevaPrioridad);
         tarea = tareaRepository.save(tarea);
+        notificacionService.crearNotificacion(tarea, tarea.getUsuario(),
+            "Tarea modificada: " + antiguoTitulo + " → " + nuevoTitulo + 
+            " (Prioridad: " + antiguaPrioridad + " → " + nuevaPrioridad + ")");
         return modelMapper.map(tarea, TareaData.class);
     }
 
@@ -111,7 +119,10 @@ public class TareaService {
         if (tarea == null) {
             throw new TareaServiceException("No existe tarea con id " + idTarea);
         }
+        Usuario usuario = tarea.getUsuario();
+        String tituloTarea = tarea.getTitulo();
         tareaRepository.delete(tarea);
+        notificacionService.crearNotificacion(tarea, usuario, "Tarea eliminada: " + tituloTarea);
     }
 
     @Transactional

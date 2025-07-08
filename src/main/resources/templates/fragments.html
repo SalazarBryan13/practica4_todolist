@@ -44,6 +44,9 @@
     <script th:src="@{/js/jquery.min.js}"></script>
     <script th:src="@{/js/popper.min.js}"></script>
     <script th:src="@{/js/bootstrap.min.js}"></script>
+    <th:block th:if="${usuario != null}">
+        <script th:replace="fragments/navbar :: notificaciones-script"></script>
+    </th:block>
 </div>
 
 </html>
