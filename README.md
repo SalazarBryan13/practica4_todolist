@@ -6,6 +6,7 @@ Aplicación ToDoList de la asignatura Metodologías Ágiles  usando Spring Boot 
 - Bryan  Salazar 
 - Francisco Tamayo
 - Maicol Nacimba
+- Dylan Granizo
 
 ## Descripción funcional
 Esta aplicación permite a los usuarios:
