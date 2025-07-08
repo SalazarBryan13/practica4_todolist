@@ -16,8 +16,8 @@
         <div class="form-group">
             <label for="prioridad">Prioridad:</label>
             <select class="form-control" id="prioridad" name="prioridad" th:field="*{prioridad}">
-                <option th:each="prioridad : ${prioridades}" 
-                        th:value="${prioridad}" 
+                <option th:each="prioridad : ${prioridades}"
+                        th:value="${prioridad.name()}"
                         th:text="${prioridad.descripcion}"
                         th:selected="${prioridad == tarea.prioridad}">
                 </option>

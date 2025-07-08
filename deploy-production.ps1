@@ -39,15 +39,13 @@ if ($LASTEXITCODE -eq 0) {
 Write-Host '4. Esperando a que PostgreSQL esté listo...' -ForegroundColor Cyan
 Start-Sleep -Seconds 10
 
-# 4.1. Cargar el esquema de la base de datos si no existe la tabla principal
-Write-Host '4.1. Cargando esquema de la base de datos...' -ForegroundColor Cyan
-docker exec -i db-equipo psql -U mads -d mads -c "\dt" | Select-String "No relations found" > $null
-if ($LASTEXITCODE -eq 0) {
-    docker exec -i db-equipo psql -U mads -d mads -f /mi-host/sql/schema-1.3.0.sql
-    Write-Host '   Esquema cargado correctamente.' -ForegroundColor Green
-} else {
-    Write-Host '   La base de datos ya tiene tablas, no se cargó el esquema.' -ForegroundColor Yellow
-}
+# 4.1. Limpiar y cargar el esquema de la base de datos
+Write-Host '4.1. Limpiando y cargando esquema de la base de datos...' -ForegroundColor Cyan
+# Eliminar todas las tablas existentes
+docker exec -i db-equipo psql -U mads -d mads -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public;"
+# Cargar el esquema actualizado con el usuario de prueba
+docker exec -i db-equipo psql -U mads -d mads -f /mi-host/sql/schema-1.3.0.sql
+Write-Host '   Esquema cargado correctamente con usuario de prueba.' -ForegroundColor Green
 
 # 5. Verificar que el contenedor esté corriendo
 Write-Host '5. Verificando estado del contenedor...' -ForegroundColor Cyan
@@ -58,11 +56,13 @@ Write-Host $containerStatus -ForegroundColor White
 Write-Host '6. Desplegando aplicación en modo producción...' -ForegroundColor Cyan
 Write-Host '   Usando perfil: postgres-prod' -ForegroundColor Yellow
 Write-Host '   Puerto: 8080' -ForegroundColor Yellow
+Write-Host '   Usuario de prueba: user@ua / 123' -ForegroundColor Yellow
 Write-Host '   Presiona Ctrl+C para detener la aplicación' -ForegroundColor Yellow
 
 docker run --rm --network network-equipo -p8080:8080 `
-    bryanhert/mads-todolist-equipo2:1.3.0-snapshot `
+    bryanhert/mads-todolist-equipo2:1.3.1 `
     --spring.profiles.active=postgres-prod --POSTGRES_HOST=postgres
 
 Write-Host '=== DESPLIEGUE COMPLETADO ===' -ForegroundColor Green
 Write-Host 'La aplicación está disponible en: http://localhost:8080' -ForegroundColor Green
+Write-Host 'Usuario de prueba: user@ua / 123' -ForegroundColor Green

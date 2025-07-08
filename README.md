@@ -108,7 +108,7 @@ java -jar target/epn-todolist-Bryan_Salazar-1.0.1-SNAPSHOT.jar
 ## Ejecución con Docker
 
 ```bash
-docker run --rm -p 8080:8080 bryanhert/mads-todolist-equipo2:1.3.0
+docker run --rm -p 8080:8080 bryanhert/mads-todolist-equipo2:1.3.1
 ```
 
 ## Credenciales de prueba

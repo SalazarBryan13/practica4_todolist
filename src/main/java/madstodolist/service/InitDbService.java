@@ -6,6 +6,7 @@ import madstodolist.repository.TareaRepository;
 import madstodolist.repository.UsuarioRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Profile;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
@@ -19,6 +20,8 @@ public class InitDbService {
     private UsuarioRepository usuarioRepository;
     @Autowired
     private TareaRepository tareaRepository;
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     // Se ejecuta tras crear el contexto de la aplicación
     // para inicializar la base de datos
@@ -26,7 +29,7 @@ public class InitDbService {
     public void initDatabase() {
         Usuario usuario = new Usuario("user@ua");
         usuario.setNombre("Usuario Ejemplo");
-        usuario.setPassword("123");
+        usuario.setPassword(passwordEncoder.encode("123"));
         usuarioRepository.save(usuario);
 
         Tarea tarea1 = new Tarea(usuario, "Lavar coche");

@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+  <head th:replace="fragments :: head (titulo='Notificaciones')"></head>
+
+  <body>
+    <div th:replace="fragments/navbar :: navbar"></div>
+
+    <div class="container-fluid mt-4">
+      <div class="row">
+        <div class="col-md-8 offset-md-2">
+          <div class="card">
+            <div class="card-header bg-primary text-white">
+              <h3><i class="fas fa-bell"></i> Notificaciones</h3>
+            </div>
+            <div class="card-body">
+              <div th:if="${usuario}" class="alert alert-info">
+                <strong>Usuario:</strong> <span th:text="${usuario.nombre}"></span>
+                <br>
+                <strong>Email:</strong> <span th:text="${usuario.email}"></span>
+              </div>
+              
+              <div th:if="${notificaciones != null and not #lists.isEmpty(notificaciones)}">
+                <h5>Lista de notificaciones:</h5>
+                <div class="list-group">
+                  <div th:each="notificacion : ${notificaciones}" 
+                       class="list-group-item list-group-item-action">
+                    <div class="d-flex w-100 justify-content-between">
+                      <h6 class="mb-1">
+                        <i class="fas fa-info-circle text-info"></i>
+                        <span th:text="${notificacion}"></span>
+                      </h6>
+                      <small class="text-muted">
+                        <span th:text="${#dates.format(#dates.createNow(), 'dd/MM/yyyy HH:mm')}"></span>
+                      </small>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div th:if="${notificaciones == null or #lists.isEmpty(notificaciones)}" 
+                   class="alert alert-warning">
+                <i class="fas fa-exclamation-triangle"></i>
+                No tienes notificaciones pendientes.
+              </div>
+              
+              <div class="mt-3">
+                <a th:href="@{/usuarios/{id}/tareas(id=${usuario.id})}" class="btn btn-primary">
+                  <i class="fas fa-tasks"></i> Ver mis tareas
+                </a>
+                <a th:href="@{/usuarios/{id}/tareas/nueva(id=${usuario.id})}" class="btn btn-success">
+                  <i class="fas fa-plus"></i> Nueva tarea
+                </a>
+                <a href="/" class="btn btn-secondary">
+                  <i class="fas fa-home"></i> Inicio
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div th:replace="fragments::javascript" />
+  </body>
+</html> 
