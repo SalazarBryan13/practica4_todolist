@@ -6,7 +6,8 @@
 - Bryan  Salazar 
 - Francisco Tamayo
 - Maicol Nacimba
-
+- Dylan Granizo
+- Anderson Cango
 ---
 
 ## 1. Breve documentación técnica de los cambios introducidos
