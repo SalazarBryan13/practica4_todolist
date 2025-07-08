@@ -19,6 +19,7 @@ import java.util.Collections;
 import java.util.Optional;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.stream.Collectors;
 
 @Service
 public class UsuarioService implements UserDetailsService {
@@ -132,16 +133,19 @@ public class UsuarioService implements UserDetailsService {
 
     @Transactional(readOnly = true)
     public UsuarioData findById(Long usuarioId) {
-        logger.debug("Buscando usuario por id: {}", usuarioId);
+        logger.debug("Buscando usuario por id: " + usuarioId);
         Usuario usuario = usuarioRepository.findById(usuarioId).orElse(null);
-        if (usuario == null) {
-            logger.debug("Usuario no encontrado con id: {}", usuarioId);
-            return null;
-        }
-        logger.debug("Usuario encontrado con id: {} admin={}", usuarioId, usuario.isAdmin());
+        if (usuario == null) return null;
+        logger.debug("Usuario encontrado con id: " + usuarioId + " admin=" + usuario.isAdmin());
         UsuarioData usuarioData = modelMapper.map(usuario, UsuarioData.class);
-        logger.debug("UsuarioData recuperado con id: {} admin={}", usuarioId, usuarioData.isAdmin());
+        logger.debug("UsuarioData recuperado con id: " + usuarioId + " admin=" + usuarioData.isAdmin());
         return usuarioData;
+    }
+
+    @Transactional(readOnly = true)
+    public Usuario findByIdModel(Long usuarioId) {
+        logger.debug("Buscando usuario (modelo) por id: " + usuarioId);
+        return usuarioRepository.findById(usuarioId).orElse(null);
     }
 
     @Transactional(readOnly = true)

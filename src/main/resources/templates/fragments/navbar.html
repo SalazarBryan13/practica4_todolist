@@ -26,6 +26,13 @@
                     <li class="nav-item">
                         <a class="nav-link" th:href="@{/usuarios/{id}/tareas(id=${idUsuarioLogeado})}">Tareas</a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link position-relative" th:href="@{/notificaciones}">
+                            Notificaciones
+                            <span id="notificacionesCount" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                            </span>
+                        </a>
+                    </li>
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button"
                            data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" th:text="${usuario != null ? usuario.nombre : ''}">
@@ -41,5 +48,26 @@
         </div>
     </div>
 </nav>
+
+<script th:fragment="notificaciones-script">
+    function actualizarContadorNotificaciones() {
+        $.get('/notificaciones/contador', function(data) {
+            const count = data.count;
+            const countElement = $('#notificacionesCount');
+            if (count > 0) {
+                countElement.text(count);
+                countElement.show();
+            } else {
+                countElement.hide();
+            }
+        });
+    }
+
+    // Actualizar contador cada 30 segundos
+    $(document).ready(function() {
+        actualizarContadorNotificaciones();
+        setInterval(actualizarContadorNotificaciones, 30000);
+    });
+</script>
 </body>
 </html> 
