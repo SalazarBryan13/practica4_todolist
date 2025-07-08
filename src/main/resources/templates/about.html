@@ -1,22 +1,40 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
+  <head th:replace="fragments :: head (titulo='Acerca de')"></head>
 
-<head th:replace="fragments :: head (titulo='Acerca de')"></head>
-
-<body>
+  <body>
     <div th:replace="fragments/navbar :: navbar"></div>
 
     <div class="container-fluid mt-4">
+<<<<<<< HEAD
+      <div class="row">
+        <div class="col">
+          <h1>ToDoList - Equipo XX</h1>
+          <ul>
+            <li>Desarrollada por el Equipo XX</li>
+            <li>Miembros del equipo:</li>
+            <ul>
+              <li>Bryan Salazar</li>
+              <li>Francisco Tamayo</li>
+              <li>Maicol Nacimba</li>
+              <li>Dylan Granizo</li>
+              <li>Anderson Cango</li>
+            </ul>
+            <li>Versión 1.3.0</li>
+            <li>Fecha de release: 4 de julio de 2025</li>
+          </ul>
+=======
         <div class="row">
             <div class="col">
-                <h1>ToDoList - Equipo XX</h1>
+                <h1>ToDoList - Equipo 02</h1>
                 <ul>
-                    <li>Desarrollada por el Equipo XX</li>
+                    <li>Desarrollada por el Equipo 02</li>
                     <li>Miembros del equipo:</li>
                     <ul>
                         <li>Bryan Salazar </li>
                         <li>Francisco Tamayo</li>
                         <li>Micol Nacimba</li>
+                        <li>Dylan Granizo</li>
 
 
                     </ul>
@@ -24,9 +42,11 @@
                     <li>Fecha de release: 4 de julio de 2025</li>
                 </ul>
             </div>
+>>>>>>> 952c37554d538dcbc13bdaf03b7f0b9ac05e31af
         </div>
+      </div>
     </div>
 
-    <div th:replace="fragments::javascript"/>
-</body>
-</html> 
+    <div th:replace="fragments::javascript" />
+  </body>
+</html>
