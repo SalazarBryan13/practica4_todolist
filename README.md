@@ -1,6 +1,10 @@
 # ToDoList Spring Boot - Equipo 2
 
+<<<<<<< HEAD
 Aplicación ToDoList de la asignatura Metodologías Ágiles usando Spring Boot .
+=======
+Aplicación ToDoList de la asignatura Metodologías Ágiles  usando Spring Boot .
+>>>>>>> 952c37554d538dcbc13bdaf03b7f0b9ac05e31af
 
 ## Equipo de desarrollo
 
