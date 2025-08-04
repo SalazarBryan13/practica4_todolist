@@ -16,8 +16,50 @@ Esta aplicación permite a los usuarios:
 
 - Registrarse y autenticarse.
 - Gestionar tareas personales (crear, editar, eliminar, listar).
+- **NUEVO v1.4.0:** Asignar prioridades a las tareas (ALTA, MEDIA, BAJA).
+- **NUEVO v1.4.0:** Marcar tareas con estados (Pendiente, En Progreso, Completada).
+- **NUEVO v1.4.0:** Editar perfil de usuario completo.
+- **NUEVO v1.4.0:** Sistema de recuperación de contraseñas.
+- **NUEVO v1.4.0:** Sistema de notificaciones automáticas para acciones de tareas.
 - Visualizar una página "Acerca de" con información del equipo y la versión.
 - Los administradores pueden ver el listado de usuarios, ver detalles y bloquear/habilitar usuarios.
+
+## Nuevas Funcionalidades v1.4.0
+
+### Sistema de Prioridades de Tareas
+- **Prioridades:** ALTA (Rojo), MEDIA (Amarillo), BAJA (Verde)
+- **UI Mejorada:** Badges con colores semánticamente correctos
+- **Formularios:** Selección de prioridad en creación y edición
+- **Visualización:** Lista de tareas con indicadores visuales
+
+### Estados de Tareas
+- **Estados disponibles:** Pendiente, En Progreso, Completada
+- **Filtros:** Capacidad de filtrar tareas por estado
+- **UI actualizada:** Indicadores visuales de estado
+- **Funcionalidad completa:** Cambio de estados desde la interfaz
+
+### Edición Completa de Perfil
+- **Formulario completo:** Edición de nombre, email y datos personales
+- **Endpoint funcional:** POST /usuarios/{id}/editar implementado
+- **Validaciones:** Datos validados client-side y server-side
+- **Feedback inmediato:** Confirmación de cambios guardados
+
+### Sistema de Recuperación de Contraseñas
+- **Token-based recovery:** Sistema seguro con tokens temporales
+- **Envío de emails:** Automático con enlaces de recuperación
+- **Flujo completo:** Desde solicitud hasta reset exitoso
+- **Seguridad:** Tokens con expiración y validación
+
+### Sistema de Notificaciones
+- **Automáticas:** Notificaciones para crear, editar y eliminar tareas
+- **Persistentes:** Almacenamiento en base de datos
+- **Feedback:** Confirmación inmediata de acciones
+
+### CI/CD Completo
+- **Azure Pipelines:** Build y deploy automatizado
+- **Testing:** Pruebas automáticas en cada push
+- **Deployment:** Despliegue automático a Azure App Service
+- **Zero Downtime:** Estrategia blue-green deployment
 
 ## Estructura del proyecto
 
