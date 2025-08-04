@@ -1,0 +1,186 @@
+# Azure DevOps Pipeline para TodoList Spring Boot
+# CI/CD pipeline con Maven, pruebas automáticas y despliegue
+
+trigger:
+  branches:
+    include:
+      - '*'  # CI en todas las ramas
+  paths:
+    exclude:
+      - README.md
+      - doc/*
+
+# Variables globales
+variables:
+  MAVEN_VERSION: '3.8.1'
+  JAVA_VERSION: '8'
+  BUILD_ARTIFACT_NAME: 'todolist-app'
+  APP_SERVICE_NAME: 'todolist-epn-prod'
+  RESOURCE_GROUP: 'rg-todolist-prod'
+
+# Stages del pipeline
+stages:
+  # Stage 1: Build y Test (CI)
+  - stage: 'Build_and_Test'
+    displayName: 'Build and Test (CI)'
+    condition: always()
+    jobs:
+      - job: 'BuildAndTest'
+        displayName: 'Build, Test and Package'
+        pool:
+          vmImage: 'ubuntu-latest'
+        
+        steps:
+          - task: JavaToolInstaller@0
+            displayName: 'Setup Java $(JAVA_VERSION)'
+            inputs:
+              versionSpec: '$(JAVA_VERSION)'
+              jdkArchitectureOption: 'x64'
+              jdkSourceOption: 'PreInstalled'
+
+          - task: Maven@3
+            displayName: 'Maven Clean Compile'
+            inputs:
+              mavenPomFile: 'pom.xml'
+              goals: 'clean compile'
+              options: '-DskipTests=true'
+              javaHomeOption: 'JDKVersion'
+              jdkVersionOption: '1.8'
+              mavenVersionOption: 'Default'
+
+          - task: Maven@3
+            displayName: 'Run Unit Tests'
+            inputs:
+              mavenPomFile: 'pom.xml'
+              goals: 'test'
+              publishJUnitResults: true
+              testResultsFiles: '**/surefire-reports/TEST-*.xml'
+              javaHomeOption: 'JDKVersion'
+              jdkVersionOption: '1.8'
+              mavenVersionOption: 'Default'
+            continueOnError: false
+
+          - task: PublishTestResults@2
+            displayName: 'Publish Test Results'
+            inputs:
+              testResultsFormat: 'JUnit'
+              testResultsFiles: '**/surefire-reports/TEST-*.xml'
+              mergeTestResults: true
+              failTaskOnFailedTests: true
+            condition: always()
+
+          - task: Maven@3
+            displayName: 'Package Application'
+            inputs:
+              mavenPomFile: 'pom.xml'
+              goals: 'package'
+              options: '-DskipTests=true'
+              javaHomeOption: 'JDKVersion'
+              jdkVersionOption: '1.8'
+              mavenVersionOption: 'Default'
+
+          - task: PublishBuildArtifacts@1
+            displayName: 'Publish Build Artifacts'
+            inputs:
+              pathToPublish: 'target/'
+              artifactName: '$(BUILD_ARTIFACT_NAME)'
+            condition: succeeded()
+
+  # Stage 2: Deploy to Production (CD) - Solo en main
+  - stage: 'Deploy_Production'
+    displayName: 'Deploy to Production (CD)'
+    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+    dependsOn: 'Build_and_Test'
+    jobs:
+      - deployment: 'DeployToProduction'
+        displayName: 'Deploy to Azure App Service'
+        pool:
+          vmImage: 'ubuntu-latest'
+        environment: 'Production'
+        
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - task: DownloadBuildArtifacts@0
+                  displayName: 'Download Build Artifacts'
+                  inputs:
+                    buildType: 'current'
+                    downloadType: 'single'
+                    artifactName: '$(BUILD_ARTIFACT_NAME)'
+                    downloadPath: '$(System.ArtifactsDirectory)'
+
+                - task: AzureWebApp@1
+                  displayName: 'Deploy to Azure App Service'
+                  inputs:
+                    azureSubscription: 'Azure-Service-Connection'
+                    appType: 'webAppLinux'
+                    appName: '$(APP_SERVICE_NAME)'
+                    resourceGroupName: '$(RESOURCE_GROUP)'
+                    package: '$(System.ArtifactsDirectory)/$(BUILD_ARTIFACT_NAME)/*.jar'
+                    runtimeStack: 'JAVA|8-jre8'
+                    startUpCommand: 'java -jar /home/site/wwwroot/*.jar --server.port=80'
+
+                # Configurar App Settings para producción
+                - task: AzureAppServiceSettings@1
+                  displayName: 'Configure App Settings'
+                  inputs:
+                    azureSubscription: 'Azure-Service-Connection'
+                    appName: '$(APP_SERVICE_NAME)'
+                    resourceGroupName: '$(RESOURCE_GROUP)'
+                    appSettings: |
+                      [
+                        {
+                          "name": "SPRING_PROFILES_ACTIVE",
+                          "value": "postgres-prod"
+                        },
+                        {
+                          "name": "SPRING_DATASOURCE_URL",
+                          "value": "$(POSTGRES_CONNECTION_STRING)"
+                        },
+                        {
+                          "name": "SPRING_DATASOURCE_USERNAME",
+                          "value": "$(POSTGRES_USERNAME)"
+                        },
+                        {
+                          "name": "SPRING_DATASOURCE_PASSWORD",
+                          "value": "$(POSTGRES_PASSWORD)"
+                        }
+                      ]
+
+  # Stage 3: Post-Deployment Tests
+  - stage: 'Post_Deployment_Tests'
+    displayName: 'Post-Deployment Validation'
+    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+    dependsOn: 'Deploy_Production'
+    jobs:
+      - job: 'HealthCheck'
+        displayName: 'Application Health Check'
+        pool:
+          vmImage: 'ubuntu-latest'
+        
+        steps:
+          - task: PowerShell@2
+            displayName: 'Health Check Endpoint'
+            inputs:
+              targetType: 'inline'
+              script: |
+                $appUrl = "https://$(APP_SERVICE_NAME).azurewebsites.net"
+                Write-Host "Checking application health at: $appUrl"
+                
+                # Wait for deployment to complete
+                Start-Sleep -Seconds 30
+                
+                try {
+                  $response = Invoke-WebRequest -Uri "$appUrl/login" -UseBasicParsing -TimeoutSec 30
+                  if ($response.StatusCode -eq 200) {
+                    Write-Host "✅ Application is healthy - Status: $($response.StatusCode)"
+                    exit 0
+                  } else {
+                    Write-Host "❌ Application health check failed - Status: $($response.StatusCode)"
+                    exit 1
+                  }
+                } catch {
+                  Write-Host "❌ Application health check failed - Error: $($_.Exception.Message)"
+                  exit 1
+                }
